@@ -125,32 +125,29 @@ func Parse() {
 
 	for _, data := range input {
 		if isPotentialOptionName(data) {
-			name := strings.Trim(data, " -")
-			err := cache.SetOptionParsed(name)
-			if err != nil {
+			if err := cache.SetOptionParsed(data); err != nil {
 				exitWithHelpMessage(err.Error())
 			} else {
 				currentOptionName = data
 			}
-		} else if isPotentialOptionValue(currentOptionName, data) {
-			err := cache.SetOptionValue(currentOptionName, data)
-			if err != nil {
+		} else if cache.IsValidOptionValue(currentOptionName, data) {
+			if err := cache.SetOptionValue(currentOptionName, data); err != nil {
 				exitWithHelpMessage(err.Error())
 			} else {
 				currentOptionName = ""
 			}
-		} else if isPotentialArgumentValue(currentOptionName, data) {
-			err := cache.AddArgumentValue(data)
-			if err != nil {
+		} else if cache.IsValidArgumentValue(data) {
+			if err := cache.AddArgumentValue(data); err != nil {
 				exitWithHelpMessage(err.Error())
+			} else {
+				currentOptionName = ""
 			}
 		} else {
 			exitWithHelpMessage("Unexpected input: " + data)
 		}
 	}
 
-	err := cache.AssertAllArgumentValuesProvided()
-	if err != nil {
+	if err := cache.AssertAllArgumentValuesProvided(); err != nil {
 		exitWithHelpMessage(err.Error())
 	}
 }
@@ -188,14 +185,6 @@ func getInput() []string {
 
 func isPotentialOptionName(data string) bool {
 	return strings.HasPrefix(data, "-")
-}
-
-func isPotentialOptionValue(optionName string, value string) bool {
-	return isPotentialOptionName(optionName) && value != "" && !isPotentialOptionName(value)
-}
-
-func isPotentialArgumentValue(optionName string, value string) bool {
-	return optionName == "" && value != ""
 }
 
 func exitWithHelpMessage(message string) {

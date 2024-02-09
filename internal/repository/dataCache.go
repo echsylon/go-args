@@ -12,11 +12,13 @@ import (
 type DataCache interface {
 	ClearValues()
 	DefineOption(shortName string, longName string, pattern string, description string) error
+	IsValidOptionValue(name string, value string) bool
 	GetOptions() []model.Option
 	SetOptionParsed(name string) error
 	SetOptionValue(name string, value string) error
 	GetOptionValue(name string) string
 	DefineArgument(minCount int, maxCount int, name string, pattern string, description string) error
+	IsValidArgumentValue(value string) bool
 	GetArguments() []model.Argument
 	AddArgumentValue(value string) error
 	GetArgumentValues(name string) []string
@@ -63,6 +65,15 @@ func (cache *dataCache) DefineOption(shortName string, longName string, pattern 
 		cache.options = append(cache.options, model.NewOption(shortName, longName, pattern, description))
 	}
 
+	return result
+}
+
+func (cache *dataCache) IsValidOptionValue(name string, value string) bool {
+	var result = false
+	option := findOption(name, &cache.options)
+	if option != nil {
+		result = canSaveOptionValue(option, value, &cache.values)
+	}
 	return result
 }
 
@@ -120,6 +131,17 @@ func (cache *dataCache) DefineArgument(minCount int, maxCount int, name string, 
 		cache.arguments = append(cache.arguments, model.NewArgument(minCount, maxCount, name, pattern, description))
 	}
 
+	return result
+}
+
+func (cache *dataCache) IsValidArgumentValue(value string) bool {
+	var result = false
+	for _, argument := range cache.arguments {
+		if canSaveArgumentValue(argument, value, &cache.values) {
+			result = true
+			break
+		}
+	}
 	return result
 }
 
