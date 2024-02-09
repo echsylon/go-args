@@ -5,6 +5,7 @@ package args
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/echsylon/go-args/internal/repository"
@@ -152,18 +153,99 @@ func Parse() {
 	}
 }
 
-// GetOptionValue returns the parsed value for a defined option. Note that
-// options are optional and that this function therefore may return an empty
-// string. The function accepts both the shortName and the longName of the
-// defined option.
-func GetOptionValue(name string) string {
-	return getRepository().GetOptionValue(name)
+// GetOptionValueString returns the parsed value for a defined option as a
+// string. If there is no value for the option, the fallback is returned
+// instead.
+func GetOptionStringValue(name string, fallback string) string {
+	result := getRepository().GetOptionValue(name)
+	if result == "" {
+		result = fallback
+	}
+	return result
+}
+
+// GetOptionValueInt returns the parsed value for a defined option as a
+// 64 bit integer. If there is no value for the option, the fallback is
+// returned instead.
+func GetOptionIntValue(name string, fallback int64) int64 {
+	value := getRepository().GetOptionValue(name)
+	result, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		result = fallback
+	}
+	return result
+}
+
+// GetOptionValueFloat returns the parsed value for a defined option as a
+// 64 bit floating point number. If there is no value for the option, the
+// fallback is returned instead.
+func GetOptionFloatValue(name string, fallback float64) float64 {
+	value := getRepository().GetOptionValue(name)
+	result, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		result = fallback
+	}
+	return result
+}
+
+// GetOptionValueBool returns the parsed value for a defined option as a
+// boolean. If there is no value for the option, the fallback is returned
+// instead.
+func GetOptionBoolValue(name string, fallback bool) bool {
+	value := getRepository().GetOptionValue(name)
+	result, err := strconv.ParseBool(value)
+	if err != nil {
+		result = fallback
+	}
+	return result
 }
 
 // GetArgumentValues returns all parsed mandatory values that matched the
 // defined argument.
 func GetArgumentValues(name string) []string {
 	return getRepository().GetArgumentValues(name)
+}
+
+// GetArgumentIntValues returns all parsed mandatory values that matched
+// the defined argument and can be parsed into a 64 bit integer. Values
+// that can not be parsed are simply omitted.
+func GetArgumentIntValues(name string) []int64 {
+	values := getRepository().GetArgumentValues(name)
+	result := []int64{}
+	for _, value := range values {
+		if number, err := strconv.ParseInt(value, 10, 64); err == nil {
+			result = append(result, number)
+		}
+	}
+	return result
+}
+
+// GetArgumentFloatValues returns all parsed mandatory values that matched
+// the defined argument and can be parsed into a 64 bit floating point
+// number. Values that can not be parsed are simply omitted.
+func GetArgumentFloatValues(name string) []float64 {
+	values := getRepository().GetArgumentValues(name)
+	result := []float64{}
+	for _, value := range values {
+		if number, err := strconv.ParseFloat(value, 64); err == nil {
+			result = append(result, number)
+		}
+	}
+	return result
+}
+
+// GetArgumentBoolValues returns all parsed mandatory values that matched
+// the defined argument and can be parsed into a boolean value. Values
+// that can not be parsed are simply omitted.
+func GetArgumentBoolValues(name string) []bool {
+	values := getRepository().GetArgumentValues(name)
+	result := []bool{}
+	for _, value := range values {
+		if state, err := strconv.ParseBool(value); err == nil {
+			result = append(result, state)
+		}
+	}
+	return result
 }
 
 // Reset will delete all previously configured options and arguments and
