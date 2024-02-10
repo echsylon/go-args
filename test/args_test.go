@@ -14,7 +14,7 @@ func Test_WhenRegisteringInvalidOption_ThenPanic(t *testing.T) {
 		}
 	}()
 
-	args.DefineConstrainedOption("shortName", "shortName", "description", "")
+	args.DefineOptionStrict("shortName", "shortName", "description", "")
 }
 
 func Test_WhenRegisteringInvalidArgument_ThenPanic(t *testing.T) {
@@ -24,12 +24,12 @@ func Test_WhenRegisteringInvalidArgument_ThenPanic(t *testing.T) {
 		}
 	}()
 
-	args.DefineConstrainedArgument("ARG", "Description", 0, 1, "")
+	args.DefineArgumentStrict("ARG", "Description", 0, 1, "")
 }
 
 func Test_WhenGettingStringValueForNonRegisteredOption_ThenFallbackIsReturned(t *testing.T) {
 	expected := "fallback"
-	actual := args.GetOptionStringValue("unregisterd", expected)
+	actual := args.GetOptionValue("unregisterd", expected)
 	if actual != expected {
 		t.Errorf("Expected <%s>, but got <%s>", expected, actual)
 	}
@@ -102,7 +102,7 @@ func Test_WhenGettingIntValuesForPartiallyIntArguments_ThenOnlyIntValuesAreRetur
 	os.Args = []string{"appName", "12", "13.1", "14"}
 
 	args.Reset()
-	args.DefineConstrainedArgument("arg", "description", 1, 3, "")
+	args.DefineArgumentStrict("arg", "description", 1, 3, "")
 	args.Parse()
 	a := args.GetArgumentIntValues("arg")
 
@@ -119,7 +119,7 @@ func Test_WhenGettingFloatValuesForPartiallyFloatArguments_ThenOnlyFloatValuesAr
 	os.Args = []string{"appName", "true", "3.1", "1.4"}
 
 	args.Reset()
-	args.DefineConstrainedArgument("arg", "description", 1, 3, "")
+	args.DefineArgumentStrict("arg", "description", 1, 3, "")
 	args.Parse()
 	a := args.GetArgumentFloatValues("arg")
 
@@ -136,7 +136,7 @@ func Test_WhenGettingBoolValuesForPartiallyBoolArguments_ThenOnlyBoolValuesAreRe
 	os.Args = []string{"appName", "True", "1", "1.4"}
 
 	args.Reset()
-	args.DefineConstrainedArgument("arg", "description", 1, 3, "")
+	args.DefineArgumentStrict("arg", "description", 1, 3, "")
 	args.Parse()
 	a := args.GetArgumentBoolValues("arg")
 
@@ -172,7 +172,7 @@ func Test_WhenParsingRegisteredOptionWithValue_ThenTheValueCanBeRetrievedUndisto
 	args.Reset()
 	args.DefineOption("v", "description")
 	args.Parse()
-	actual := args.GetOptionStringValue("v", "fallback")
+	actual := args.GetOptionValue("v", "fallback")
 
 	if actual != expected {
 		t.Errorf("Expected <%s>, but got <%s>", expected, actual)
@@ -186,8 +186,8 @@ func Test_WhenDefiningArgumentsWithDifferentConstraints_ThenTheValuesDoNotGetMix
 	os.Args = []string{"appName", "file1.txt", "2000", "file2.txt"}
 
 	args.Reset()
-	args.DefineConstrainedArgument("TIMEOUT", "description", 1, 1, `^\d+$`)
-	args.DefineConstrainedArgument("FILES", "description", 1, 2, `^*\.txt$`)
+	args.DefineArgumentStrict("TIMEOUT", "description", 1, 1, `^\d+$`)
+	args.DefineArgumentStrict("FILES", "description", 1, 2, `^*\.txt$`)
 	args.Parse()
 	n := args.GetArgumentIntValues("TIMEOUT")
 	s := args.GetArgumentValues("FILES")
@@ -207,10 +207,30 @@ func Test_WhenHavingMultipleMatchingArguments_ThenTheValuesAreDistributedInOrder
 	args.DefineArgument("LOWER-CASE", "description")
 	args.DefineArgument("UPPER-CASE", "description")
 	args.Parse()
-	upper := args.GetArgumentValues("UPPER-CASE")
-	lower := args.GetArgumentValues("LOWER-CASE")
+	upper := args.GetArgumentValues("UPPER-CASE")[0]
+	lower := args.GetArgumentValues("LOWER-CASE")[0]
 
-	if len(lower) != 1 || lower[0] != "A" || len(upper) != 1 || upper[0] != "b" {
+	if lower != "A" || upper != "b" {
 		t.Errorf("Expected <[A]> and <[b]>, but got <%v> and <%v>", lower, upper)
+	}
+}
+
+func Test_WhenHavingMultipleMatchingOptionsAndArguments_ThenValuesAreValidatedInOrderOfDefinition(t *testing.T) {
+	actualArgs := os.Args
+	defer func() { os.Args = actualArgs }()
+
+	os.Args = []string{"appName", "a", "-s", "b", "c"}
+
+	args.Reset()
+	args.DefineOption("s", "description")
+	args.DefineArgument("arg1", "description")
+	args.DefineArgument("arg2", "description")
+	args.Parse()
+	opt := args.GetOptionValue("s", "empty")
+	arg1 := args.GetArgumentValues("arg1")[0]
+	arg2 := args.GetArgumentValues("arg2")[0]
+
+	if opt != "b" || arg1 != "a" || arg2 != "c" {
+		t.Errorf("Expected <b> and <a> and <c>, but got <%s> and <%s> and <%s>", opt, arg1, arg2)
 	}
 }

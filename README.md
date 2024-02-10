@@ -22,31 +22,31 @@ import (
 )
 
 func main() {
-    // Make help text nice
-    args.Description = "The example app showcases how to use the go-args module."
+	// Make help text nice
+	args.Description = "The example app showcases how to use the go-args module."
 
-    // Define optional user input
-    args.DefineOption("m", "Max lines to read.") // simple short-name option with no filter
-    args.DefineConstrainedOption("v", "verbose", "Print detailed output.", `(true|false)`)
+	// Define optional user input
+	args.DefineOption("m", "Max lines to read.") // simple short-name option with no filter
+	args.DefineOptionStrict("v", "verbose", "Print detailed output.", `^(true|false)$`)
 
-    // Define mandatory user input
-    args.DefineConstrainedArgument("FILES", "Files to read from.", `^*\.txt$`, 1, 2)
-    args.DefineArgument("TIMEOUT", "Read timeout milliseconds")
+	// Define mandatory user input
+	args.DefineArgumentStrict("FILES", "Files to read from.", 1, 2, `^*\.txt$`)
+	args.DefineArgument("TIMEOUT", "Read timeout milliseconds.")
 
-    // Read and validate provided user data
-    args.Parse()
+	// Read and validate provided user data
+	args.Parse()
 
-    // Get the values...
-    var maxLines int64 = args.GetOptionIntValue("m", 2)
-    var printMuch bool = args.GetOptionBoolValue("verbose", false)
-    var files []string = args.GetArgumentValues("FILES")
-    var time []int64 = args.GetArgumentIntValues("TIMEOUT")
+	// Get the values...
+	var maxLines int64 = args.GetOptionIntValue("m", 2)
+	var printMuch bool = args.GetOptionBoolValue("verbose", false)
+	var files []string = args.GetArgumentValues("FILES")
+	var time []int64 = args.GetArgumentIntValues("TIMEOUT")
 
-    // ...and use them as you see fit
-    fmt.Printf("verbose:  %t\n", printMuch)
-    fmt.Printf("lines:    %d\n", maxLines)
-    fmt.Printf("files:    %v (%d)\n", files, len(files))
-    fmt.Printf("time:     %v\n", time)
+	// ...and use them as you see fit
+	fmt.Printf("verbose:  %t\n", printMuch)
+	fmt.Printf("lines:    %d\n", maxLines)
+	fmt.Printf("files:    %v (%d)\n", files, len(files))
+	fmt.Printf("time:     %v\n", time)
 }
 ```
 
@@ -63,14 +63,18 @@ files:    [file 1.txt file2.txt] (2)
 time:     [2000]
 ```
 
-Key observation here is that the constraint patterns have been chosen carefully, hence the argument list can be mixed and still end up under the correct definition. The same goes for the options. Since the `--verbose` flag only accepts `true` or `false` as a value, it won't capture `"file 1.txt"`.
+
+
+## Worth mentioning
+
+The constraint patterns for both options and arguments in above example have been chosen carefully, hence the order of the FILES and TIMEOUT arguments can be mixed freely and still end up under the correct definition. The same goes for the options: since the `--verbose` flag only accepts `true` or `false` as a value, it won't capture the `"file 1.txt"` argument.
 
 Would the command instead have been the below (with an additional `file3.txt` argument):
 ```bash
 $ ./xmpl -m 5 --verbose "file 1.txt" 2000 file2.txt file3.txt
 ```
 
-The output from the application would instead have been like so (since the `TIMEOUT` argument only accepts 1 value and `FILES` only 2):
+The output from the application would instead have been like so (since the `FILES` argument is configured to only accept 2 values):
 ```
 Unexpected input: file3.txt
 

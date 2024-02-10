@@ -30,16 +30,16 @@ var Description string
 //
 // The description, if given, is only shown in the help output.
 //
-// See DefineConstrainedOption for more details.
+// See DefineOptionStrict for more details.
 func DefineOption(name string, description string) {
 	if len(name) > 1 {
-		DefineConstrainedOption("", name, description, "")
+		DefineOptionStrict("", name, description, "")
 	} else {
-		DefineConstrainedOption(name, "", description, "")
+		DefineOptionStrict(name, "", description, "")
 	}
 }
 
-// DefineConstrainedOption allows the developer to define an optional command
+// DefineOptionStrict allows the developer to define an optional command
 // line argument the caller can pass to the application. Only defined options
 // will be accepted during the parsing phase.
 //
@@ -63,7 +63,7 @@ func DefineOption(name string, description string) {
 //
 // If the caller passes a value that doesn't match the given pattern, the
 // library will print a help text and exit the application gracefully.
-func DefineConstrainedOption(shortName string, longName string, description string, pattern string) {
+func DefineOptionStrict(shortName string, longName string, description string, pattern string) {
 	err := getRepository().DefineOption(shortName, longName, description, pattern)
 	if err != nil {
 		panic(err.Error())
@@ -74,12 +74,12 @@ func DefineConstrainedOption(shortName string, longName string, description stri
 // caller must pass to the application. By default the defined argument will
 // accept exactly one value of any shape and size.
 //
-// See DefineConstrainedArgument for more details.
+// See DefineArgumentStrict for more details.
 func DefineArgument(name string, description string) {
-	DefineConstrainedArgument(name, description, 1, 1, "")
+	DefineArgumentStrict(name, description, 1, 1, "")
 }
 
-// DefineConstrainedArgument allows the developer to define more granular
+// DefineArgumentStrict allows the developer to define more granular
 // mandatory arguments the caller must pass to the application.
 //
 // If minCount and maxCount is given the number of caller provided values will
@@ -99,7 +99,7 @@ func DefineArgument(name string, description string) {
 //
 // If the caller fails to pass the constrained number of matching arguments,
 // the library will print a help text and exit the application gracefully.
-func DefineConstrainedArgument(name string, description string, minCount int, maxCount int, pattern string) {
+func DefineArgumentStrict(name string, description string, minCount int, maxCount int, pattern string) {
 	err := getRepository().DefineArgument(name, description, minCount, maxCount, pattern)
 	if err != nil {
 		panic(err.Error())
@@ -128,36 +128,37 @@ func Parse() {
 	for _, data := range input {
 		if isPotentialOptionName(data) {
 			if err := cache.SetOptionParsed(data); err != nil {
-				exitWithHelpMessage(err.Error())
+				exitWithHelpMessage(err)
 			} else {
 				currentOptionName = data
 			}
 		} else if cache.IsValidOptionValue(currentOptionName, data) {
 			if err := cache.SetOptionValue(currentOptionName, data); err != nil {
-				exitWithHelpMessage(err.Error())
+				exitWithHelpMessage(err)
 			} else {
 				currentOptionName = ""
 			}
 		} else if cache.IsValidArgumentValue(data) {
 			if err := cache.AddArgumentValue(data); err != nil {
-				exitWithHelpMessage(err.Error())
+				exitWithHelpMessage(err)
 			} else {
 				currentOptionName = ""
 			}
 		} else {
-			exitWithHelpMessage("Unexpected input: " + data)
+			err := fmt.Errorf("unexpected input: " + data)
+			exitWithHelpMessage(err)
 		}
 	}
 
 	if err := cache.AssertAllArgumentValuesProvided(); err != nil {
-		exitWithHelpMessage(err.Error())
+		exitWithHelpMessage(err)
 	}
 }
 
-// GetOptionValueString returns the parsed value for a defined option as a
+// GetOptionValue returns the parsed value for a defined option as a
 // string. If there is no value for the option, the fallback is returned
 // instead.
-func GetOptionStringValue(name string, fallback string) string {
+func GetOptionValue(name string, fallback string) string {
 	result := getRepository().GetOptionValue(name)
 	if result == "" {
 		result = fallback
@@ -165,7 +166,7 @@ func GetOptionStringValue(name string, fallback string) string {
 	return result
 }
 
-// GetOptionValueInt returns the parsed value for a defined option as a
+// GetOptionIntValue returns the parsed value for a defined option as a
 // 64 bit integer. If there is no value for the option, the fallback is
 // returned instead.
 func GetOptionIntValue(name string, fallback int64) int64 {
@@ -177,7 +178,7 @@ func GetOptionIntValue(name string, fallback int64) int64 {
 	return result
 }
 
-// GetOptionValueFloat returns the parsed value for a defined option as a
+// GetOptionFloatValue returns the parsed value for a defined option as a
 // 64 bit floating point number. If there is no value for the option, the
 // fallback is returned instead.
 func GetOptionFloatValue(name string, fallback float64) float64 {
@@ -189,7 +190,7 @@ func GetOptionFloatValue(name string, fallback float64) float64 {
 	return result
 }
 
-// GetOptionValueBool returns the parsed value for a defined option as a
+// GetOptionBoolValue returns the parsed value for a defined option as a
 // boolean. If there is no value for the option, the fallback is returned
 // instead.
 func GetOptionBoolValue(name string, fallback bool) bool {
@@ -270,14 +271,14 @@ func isPotentialOptionName(data string) bool {
 	return strings.HasPrefix(data, "-")
 }
 
-func exitWithHelpMessage(message string) {
+func exitWithHelpMessage(message error) {
 	var stringBuilder strings.Builder
 	var cache = dataCache
 	var options = cache.GetOptions()
 	var arguments = cache.GetArguments()
 
-	if message != "" {
-		stringBuilder.WriteString(message)
+	if message != nil {
+		stringBuilder.WriteString(message.Error())
 	}
 
 	var mainSection = util.GetMainHelpSection(Name, Description, &options, &arguments)
