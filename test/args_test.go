@@ -24,7 +24,7 @@ func Test_WhenRegisteringInvalidArgument_ThenPanic(t *testing.T) {
 		}
 	}()
 
-	args.DefineConstrainedArgument("ARG", "Description", "", 0, 1)
+	args.DefineConstrainedArgument("ARG", "Description", 0, 1, "")
 }
 
 func Test_WhenGettingStringValueForNonRegisteredOption_ThenFallbackIsReturned(t *testing.T) {
@@ -102,7 +102,7 @@ func Test_WhenGettingIntValuesForPartiallyIntArguments_ThenOnlyIntValuesAreRetur
 	os.Args = []string{"appName", "12", "13.1", "14"}
 
 	args.Reset()
-	args.DefineConstrainedArgument("arg", "description", "", 1, 3)
+	args.DefineConstrainedArgument("arg", "description", 1, 3, "")
 	args.Parse()
 	a := args.GetArgumentIntValues("arg")
 
@@ -119,7 +119,7 @@ func Test_WhenGettingFloatValuesForPartiallyFloatArguments_ThenOnlyFloatValuesAr
 	os.Args = []string{"appName", "true", "3.1", "1.4"}
 
 	args.Reset()
-	args.DefineConstrainedArgument("arg", "description", "", 1, 3)
+	args.DefineConstrainedArgument("arg", "description", 1, 3, "")
 	args.Parse()
 	a := args.GetArgumentFloatValues("arg")
 
@@ -136,7 +136,7 @@ func Test_WhenGettingBoolValuesForPartiallyBoolArguments_ThenOnlyBoolValuesAreRe
 	os.Args = []string{"appName", "True", "1", "1.4"}
 
 	args.Reset()
-	args.DefineConstrainedArgument("arg", "description", "", 1, 3)
+	args.DefineConstrainedArgument("arg", "description", 1, 3, "")
 	args.Parse()
 	a := args.GetArgumentBoolValues("arg")
 
@@ -186,8 +186,8 @@ func Test_WhenDefiningArgumentsWithDifferentConstraints_ThenTheValuesDoNotGetMix
 	os.Args = []string{"appName", "file1.txt", "2000", "file2.txt"}
 
 	args.Reset()
-	args.DefineConstrainedArgument("TIMEOUT", "description", `^\d+$`, 1, 1)
-	args.DefineConstrainedArgument("FILES", "description", `^*\.txt$`, 1, 2)
+	args.DefineConstrainedArgument("TIMEOUT", "description", 1, 1, `^\d+$`)
+	args.DefineConstrainedArgument("FILES", "description", 1, 2, `^*\.txt$`)
 	args.Parse()
 	n := args.GetArgumentIntValues("TIMEOUT")
 	s := args.GetArgumentValues("FILES")

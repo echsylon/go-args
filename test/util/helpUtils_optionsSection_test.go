@@ -26,7 +26,7 @@ func Test_WhenComposingOptionsHelpSectionWithEmptyOptions_ThenEmptyStringIsRetur
 
 func Test_WhenComposingOptionsHelpSectionWithoutShortName_ThenShortNameColumnIsNotIncluded(t *testing.T) {
 	expected := "Options:\n  --name description"
-	options := []model.Option{model.NewOption("", "name", "", "description")}
+	options := []model.Option{model.NewOption("", "name", "description", "")}
 	actual := util.GetOptionsHelpSection(&options)
 	if actual != expected {
 		t.Errorf("Expected: <%s>, but got <%s>", expected, actual)
@@ -35,7 +35,7 @@ func Test_WhenComposingOptionsHelpSectionWithoutShortName_ThenShortNameColumnIsN
 
 func Test_WhenComposingOptionsHelpSectionWithoutLongName_ThenLongNameColumnIsNotIncluded(t *testing.T) {
 	expected := "Options:\n  -n description"
-	options := []model.Option{model.NewOption("n", "", "", "description")}
+	options := []model.Option{model.NewOption("n", "", "description", "")}
 	actual := util.GetOptionsHelpSection(&options)
 	if actual != expected {
 		t.Errorf("Expected: <%s>, but got <%s>", expected, actual)
@@ -44,7 +44,7 @@ func Test_WhenComposingOptionsHelpSectionWithoutLongName_ThenLongNameColumnIsNot
 
 func Test_WhenComposingOptionsHelpSectionWithShortAndLongNames_ThenBothColumnsAreIncluded(t *testing.T) {
 	expected := "Options:\n  -n, --name description"
-	options := []model.Option{model.NewOption("n", "name", "", "description")}
+	options := []model.Option{model.NewOption("n", "name", "description", "")}
 	actual := util.GetOptionsHelpSection(&options)
 	if actual != expected {
 		t.Errorf("Expected: <%s>, but got <%s>", expected, actual)
@@ -59,9 +59,9 @@ func Test_WhenComposingOptionsHelpSectionWithMultipleOptions_ThenEachOptionIsInc
 	stringBuilder.WriteString("  -s          Status description")
 	expected := stringBuilder.String()
 	options := []model.Option{
-		model.NewOption("n", "name", "", "Name description"),
-		model.NewOption("", "value", "", "Value description"),
-		model.NewOption("s", "", "", "Status description"),
+		model.NewOption("n", "name", "Name description", ""),
+		model.NewOption("", "value", "Value description", ""),
+		model.NewOption("s", "", "Status description", ""),
 	}
 	actual := util.GetOptionsHelpSection(&options)
 	if actual != expected {

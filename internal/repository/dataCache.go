@@ -11,13 +11,13 @@ import (
 
 type DataCache interface {
 	ClearValues()
-	DefineOption(shortName string, longName string, pattern string, description string) error
+	DefineOption(shortName string, longName string, description string, pattern string) error
 	IsValidOptionValue(name string, value string) bool
 	GetOptions() []model.Option
 	SetOptionParsed(name string) error
 	SetOptionValue(name string, value string) error
 	GetOptionValue(name string) string
-	DefineArgument(minCount int, maxCount int, name string, pattern string, description string) error
+	DefineArgument(name string, description string, min int, max int, pattern string) error
 	IsValidArgumentValue(value string) bool
 	GetArguments() []model.Argument
 	AddArgumentValue(value string) error
@@ -49,7 +49,7 @@ func (cache *dataCache) GetArguments() []model.Argument {
 	return cache.arguments
 }
 
-func (cache *dataCache) DefineOption(shortName string, longName string, pattern string, description string) error {
+func (cache *dataCache) DefineOption(shortName string, longName string, description string, pattern string) error {
 	var result error = nil
 	if shortName == "" && longName == "" {
 		result = fmt.Errorf("no name given for option")
@@ -62,7 +62,7 @@ func (cache *dataCache) DefineOption(shortName string, longName string, pattern 
 	} else if isOptionAlreadyDefined(shortName, longName, &cache.options) {
 		result = fmt.Errorf("option already defined: %s, %s", shortName, longName)
 	} else {
-		cache.options = append(cache.options, model.NewOption(shortName, longName, pattern, description))
+		cache.options = append(cache.options, model.NewOption(shortName, longName, description, pattern))
 	}
 
 	return result
@@ -117,10 +117,10 @@ func (cache *dataCache) GetOptionValue(name string) string {
 	return result
 }
 
-func (cache *dataCache) DefineArgument(minCount int, maxCount int, name string, pattern string, description string) error {
+func (cache *dataCache) DefineArgument(name string, description string, min int, max int, pattern string) error {
 	var result error = nil
-	if !isValidArgumentCountRange(minCount, maxCount) {
-		result = fmt.Errorf("unexpected range: [%d..%d]", minCount, maxCount)
+	if !isValidArgumentCountRange(min, max) {
+		result = fmt.Errorf("unexpected range: [%d..%d]", min, max)
 	} else if !isValidArgumentName(name) {
 		result = fmt.Errorf("unexpected argument name: %s", name)
 	} else if !isValidRegularExpression(pattern) {
@@ -128,7 +128,7 @@ func (cache *dataCache) DefineArgument(minCount int, maxCount int, name string, 
 	} else if isArgumentAlreadyDefined(name, &cache.arguments) {
 		result = fmt.Errorf("argument already defined: %s", name)
 	} else {
-		cache.arguments = append(cache.arguments, model.NewArgument(minCount, maxCount, name, pattern, description))
+		cache.arguments = append(cache.arguments, model.NewArgument(name, description, min, max, pattern))
 	}
 
 	return result

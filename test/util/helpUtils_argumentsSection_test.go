@@ -31,8 +31,8 @@ func Test_WhenComposingArgumentsHelpSectionWithMultipleArguments_ThenEachArgumen
 	stringBuilder.WriteString("  ARGS     Second argument description")
 	expected := stringBuilder.String()
 	arguments := []model.Argument{
-		model.NewArgument(1, 1, "ARGUMENT", "", "First argument description"),
-		model.NewArgument(1, 2, "ARGS", "", "Second argument description"),
+		model.NewArgument("ARGUMENT", "First argument description", 1, 1, ""),
+		model.NewArgument("ARGS", "Second argument description", 1, 2, ""),
 	}
 	actual := util.GetArgumentsHelpSection(&arguments)
 	if actual != expected {

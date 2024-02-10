@@ -8,7 +8,7 @@ import (
 
 func Test_WhenCreatingNewArgument_ThenItsMinValuesCountCanBeRetrievedUndistorted(t *testing.T) {
 	expected := 1
-	arg := model.NewArgument(expected, 2, "name", "", "description")
+	arg := model.NewArgument("name", "description", expected, 2, "")
 	actual := arg.GetMinValuesCount()
 	if actual != expected {
 		t.Errorf("Expected <%d>, but got <%d>", expected, actual)
@@ -17,7 +17,7 @@ func Test_WhenCreatingNewArgument_ThenItsMinValuesCountCanBeRetrievedUndistorted
 
 func Test_WhenCreatingNewArgument_ThenItsMaxValuesCountCanBeRetrievedUndistorted(t *testing.T) {
 	expected := 2
-	arg := model.NewArgument(1, expected, "name", "", "description")
+	arg := model.NewArgument("name", "description", 1, expected, "")
 	actual := arg.GetMaxValuesCount()
 	if actual != expected {
 		t.Errorf("Expected <%d>, but got <%d>", expected, actual)
@@ -25,7 +25,7 @@ func Test_WhenCreatingNewArgument_ThenItsMaxValuesCountCanBeRetrievedUndistorted
 }
 
 func Test_WhenMaxCountIsGreaterThanOne_ThenExpectsMultipleValuesReturnsTrue(t *testing.T) {
-	arg := model.NewArgument(1, 2, "ARG", "", "description")
+	arg := model.NewArgument("ARG", "description", 1, 2, "")
 	expected := arg.ExpectsMultipleValues()
 	if !expected {
 		t.Errorf("Expected <true>, but got <false>")
@@ -33,7 +33,7 @@ func Test_WhenMaxCountIsGreaterThanOne_ThenExpectsMultipleValuesReturnsTrue(t *t
 }
 
 func Test_WhenMaxCountIsExactlyOne_ThenExpectsMultipleValuesReturnsFalse(t *testing.T) {
-	arg := model.NewArgument(1, 1, "ARG", "", "description")
+	arg := model.NewArgument("ARG", "description", 1, 1, "")
 	expected := arg.ExpectsMultipleValues()
 	if expected {
 		t.Errorf("Expected <false>, but got <true>")
@@ -42,7 +42,7 @@ func Test_WhenMaxCountIsExactlyOne_ThenExpectsMultipleValuesReturnsFalse(t *test
 
 func Test_WhenCreatingNewArgument_ThenItsNameCanBeRetrievedUndistorted(t *testing.T) {
 	expected := "ARG"
-	arg := model.NewArgument(1, 2, expected, "", "description")
+	arg := model.NewArgument(expected, "description", 1, 2, "")
 	actual := arg.GetName()
 	if actual != expected {
 		t.Errorf("Expected <%s>, but got <%s>", expected, actual)
@@ -51,7 +51,7 @@ func Test_WhenCreatingNewArgument_ThenItsNameCanBeRetrievedUndistorted(t *testin
 
 func Test_WhenCreatingNewArgument_ThenItsValuePatternCanBeRetrievedUndistorted(t *testing.T) {
 	expected := "[a-z]{2}"
-	arg := model.NewArgument(1, 2, "ARG", expected, "description")
+	arg := model.NewArgument("ARG", "description", 1, 2, expected)
 	actual := arg.GetPattern()
 	if actual != expected {
 		t.Errorf("Expected <%s>, but got <%s>", expected, actual)
@@ -60,7 +60,7 @@ func Test_WhenCreatingNewArgument_ThenItsValuePatternCanBeRetrievedUndistorted(t
 
 func Test_WhenCreatingNewArgument_ThenItsDescriptionCanBeRetrievedUndistorted(t *testing.T) {
 	expected := "Some description text"
-	arg := model.NewArgument(1, 2, "ARG", "", expected)
+	arg := model.NewArgument("ARG", expected, 1, 2, "")
 	actual := arg.GetDescription()
 	if actual != expected {
 		t.Errorf("Expected <%s>, but got <%s>", expected, actual)
