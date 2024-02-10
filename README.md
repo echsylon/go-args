@@ -1,16 +1,16 @@
-# go-args: A smarter command line argument parser for GO.
+# A smarter command line argument parser for GO.
 
 This library provides a smart and easy way for GO application developers to parse and validate their command line arguments.
 
 ## Key features
 
-* Separation of "options" (optional) and "arguments" (mandatory).
-* Short- and long name options, e.g. `-v` and `--verbose`.
+* Conceptual separation of "options" (optional) and "arguments" (mandatory).
+* Support for short- and long name options, e.g. `-v` and `--verbose`.
 * RegEx validation on user provided option and argument values.
-* Range constraints on user provided argument values (min values, max values)
+* Range constraints on argument values (min/max number of accepted values)
 * Typed value extraction (e.g "getOptionBoolValue")
 
-## An example
+## A concrete example
 Consider below example code:
 
 ```go
