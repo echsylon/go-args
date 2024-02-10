@@ -9,7 +9,7 @@ import (
 
 func Test_WhenDefiningArgumentWithMinCountZeroAndMaxCountGreaterThanMinCount_ThenErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(0, 2, "ARGUMENT", "", "description")
+	err := repo.DefineArgument("ARGUMENT", "description", 0, 2, "")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
 	}
@@ -17,7 +17,7 @@ func Test_WhenDefiningArgumentWithMinCountZeroAndMaxCountGreaterThanMinCount_The
 
 func Test_WhenDefiningArgumentWithMinCountOneAndMaxCountGreaterThanMinCount_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(1, 2, "ARGUMENT", "", "description")
+	err := repo.DefineArgument("ARGUMENT", "description", 1, 2, "")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
 	}
@@ -25,7 +25,7 @@ func Test_WhenDefiningArgumentWithMinCountOneAndMaxCountGreaterThanMinCount_Then
 
 func Test_WhenDefiningArgumentWithMinCountGreaterThanZeroAndEqualToMaxCount_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(2, 2, "ARGUMENT", "", "description")
+	err := repo.DefineArgument("ARGUMENT", "description", 2, 2, "")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
 	}
@@ -33,7 +33,7 @@ func Test_WhenDefiningArgumentWithMinCountGreaterThanZeroAndEqualToMaxCount_Then
 
 func Test_WhenDefiningArgumentWithMinCountGreaterThanZeroAndGreaterThanToMaxCount_ThenErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(3, 2, "ARGUMENT", "", "description")
+	err := repo.DefineArgument("ARGUMENT", "description", 3, 2, "")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
 	}
@@ -41,7 +41,7 @@ func Test_WhenDefiningArgumentWithMinCountGreaterThanZeroAndGreaterThanToMaxCoun
 
 func Test_WhenDefiningArgumentStartingWithUpperCaseLetterFollowedByNumbersAndUnderscore_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(1, 1, "ABC123_", "", "description")
+	err := repo.DefineArgument("ABC123_", "description", 1, 1, "")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
 	}
@@ -49,7 +49,7 @@ func Test_WhenDefiningArgumentStartingWithUpperCaseLetterFollowedByNumbersAndUnd
 
 func Test_WhenDefiningArgumentContainingNonAlphaNumericLetters_ThenErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(1, 1, "AB?123_", "", "description")
+	err := repo.DefineArgument("AB?123_", "description", 1, 1, "")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
 	}
@@ -57,7 +57,7 @@ func Test_WhenDefiningArgumentContainingNonAlphaNumericLetters_ThenErrorIsReturn
 
 func Test_WhenDefiningArgumentWithNoPattern_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(1, 1, "ARGUMENT", "", "description")
+	err := repo.DefineArgument("ARGUMENT", "description", 1, 1, "")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
 	}
@@ -65,7 +65,7 @@ func Test_WhenDefiningArgumentWithNoPattern_ThenNoErrorIsReturned(t *testing.T) 
 
 func Test_WhenDefiningArgumentWithValidRegexPattern_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(1, 1, "ARGUMENT", ".+", "description")
+	err := repo.DefineArgument("ARGUMENT", "description", 1, 1, ".+")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
 	}
@@ -73,7 +73,7 @@ func Test_WhenDefiningArgumentWithValidRegexPattern_ThenNoErrorIsReturned(t *tes
 
 func Test_WhenDefiningArgumentWithInvalidRegexPattern_ThenErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(1, 1, "ARGUMENT", "*", "description")
+	err := repo.DefineArgument("ARGUMENT", "description", 1, 1, "*")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
 	}
@@ -81,8 +81,8 @@ func Test_WhenDefiningArgumentWithInvalidRegexPattern_ThenErrorIsReturned(t *tes
 
 func Test_WhenDefiningAlreadyExistingArgument_ThenErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 1, "ARGUMENT", "", "description")
-	err := repo.DefineArgument(1, 1, "ARGUMENT", "", "description")
+	repo.DefineArgument("ARGUMENT", "description", 1, 1, "")
+	err := repo.DefineArgument("ARGUMENT", "description", 1, 1, "")
 	if err == nil {
 		t.Errorf("Expeted <error>, but got <nil>")
 	}
@@ -98,7 +98,7 @@ func Test_WhenAddingValueWithNoArgumentsDefined_ThenErrorIsReturned(t *testing.T
 
 func Test_WhenAddingValueWithMatchingPatternSaturatedArgument_ThenErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 1, "ARGUMENT", "[a-z0-9]+", "description")
+	repo.DefineArgument("ARGUMENT", "description", 1, 1, "[a-z0-9]+")
 	repo.AddArgumentValue("value1")
 	err := repo.AddArgumentValue("value2")
 	if err == nil {
@@ -108,7 +108,7 @@ func Test_WhenAddingValueWithMatchingPatternSaturatedArgument_ThenErrorIsReturne
 
 func Test_WhenAddingValueWithNonMatchingNonSaturatedPatternArgument_ThenErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 2, "ARGUMENT", `\d`, "description")
+	repo.DefineArgument("ARGUMENT", "description", 1, 2, `\d`)
 	err := repo.AddArgumentValue("text")
 	if err == nil {
 		t.Errorf("Expeted <error>, but got <nil>")
@@ -117,7 +117,7 @@ func Test_WhenAddingValueWithNonMatchingNonSaturatedPatternArgument_ThenErrorIsR
 
 func Test_WhenAddingValueWithMatchingPatternNonSaturatedArgument_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 2, "ARGUMENT", "[a-z]+", "description")
+	repo.DefineArgument("ARGUMENT", "description", 1, 2, "[a-z]+")
 	err := repo.AddArgumentValue("value")
 	if err != nil {
 		t.Errorf("Expeted <nil>, but got <error>: %s", err.Error())
@@ -126,7 +126,7 @@ func Test_WhenAddingValueWithMatchingPatternNonSaturatedArgument_ThenNoErrorIsRe
 
 func Test_WhenAddingValueWithEmptyPatternNonSaturatedArgument_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 2, "ARGUMENT", "", "description")
+	repo.DefineArgument("ARGUMENT", "description", 1, 2, "")
 	err := repo.AddArgumentValue("value")
 	if err != nil {
 		t.Errorf("Expeted <nil>, but got <error>: %s", err.Error())
@@ -135,8 +135,8 @@ func Test_WhenAddingValueWithEmptyPatternNonSaturatedArgument_ThenNoErrorIsRetur
 
 func Test_WhenAddingValueWithMatchingPatternSaturatedAndNonSaturatedArguments_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 1, "ARGUMENT1", "[a-z]+", "description")
-	repo.DefineArgument(1, 1, "ARGUMENT2", "", "description")
+	repo.DefineArgument("ARGUMENT1", "description", 1, 1, "[a-z]+")
+	repo.DefineArgument("ARGUMENT2", "description", 1, 1, "")
 	repo.AddArgumentValue("value")
 	err := repo.AddArgumentValue("value")
 	if err != nil {
@@ -146,8 +146,8 @@ func Test_WhenAddingValueWithMatchingPatternSaturatedAndNonSaturatedArguments_Th
 
 func Test_WhenAddingValueWithMultipleMatchingPatternNonSaturatedArguments_ThenItIsOnlyAddedToTheFirstArgument(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 1, "ARGUMENT1", "[a-zA-Z]+", "description")
-	repo.DefineArgument(1, 1, "ARGUMENT2", "[a-z]+", "description")
+	repo.DefineArgument("ARGUMENT1", "description", 1, 1, "[a-zA-Z]+")
+	repo.DefineArgument("ARGUMENT2", "description", 1, 1, "[a-z]+")
 	repo.AddArgumentValue("value")
 	count1 := len(repo.GetArgumentValues("ARGUMENT1"))
 	count2 := len(repo.GetArgumentValues("ARGUMENT2"))
@@ -158,8 +158,8 @@ func Test_WhenAddingValueWithMultipleMatchingPatternNonSaturatedArguments_ThenIt
 
 func Test_WhenRequestingValuesForArguments_ThenOnlyMatchingValuesAreReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 2, "ARGUMENT1", "[a-z]+", "description")
-	repo.DefineArgument(1, 2, "ARGUMENT2", "[0-9]+", "description")
+	repo.DefineArgument("ARGUMENT1", "description", 1, 2, "[a-z]+")
+	repo.DefineArgument("ARGUMENT2", "description", 1, 2, "[0-9]+")
 	repo.AddArgumentValue("value")
 	repo.AddArgumentValue("123")
 	values := repo.GetArgumentValues("ARGUMENT1")
@@ -171,7 +171,7 @@ func Test_WhenRequestingValuesForArguments_ThenOnlyMatchingValuesAreReturned(t *
 
 func Test_WhenRequestingValuesForNonExistingArgument_ThenEmptyResultSetIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 2, "ARGUMENT", "", "description")
+	repo.DefineArgument("ARGUMENT", "description", 1, 2, "")
 	repo.AddArgumentValue("value")
 	values := repo.GetArgumentValues("NON_EXISTING_ARGUMENT")
 	actual := strings.Join(values, ", ")
@@ -182,8 +182,8 @@ func Test_WhenRequestingValuesForNonExistingArgument_ThenEmptyResultSetIsReturne
 
 func Test_WhenAssertingValuesCountWithAllArgumentsSatisfied_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 2, "ARGUMENT1", `[a-z]+`, "description")
-	repo.DefineArgument(1, 2, "ARGUMENT2", `\d`, "description")
+	repo.DefineArgument("ARGUMENT1", "description", 1, 2, `[a-z]+`)
+	repo.DefineArgument("ARGUMENT2", "description", 1, 2, `\d`)
 	repo.AddArgumentValue("value")
 	repo.AddArgumentValue("2")
 	err := repo.AssertAllArgumentValuesProvided()
@@ -194,8 +194,8 @@ func Test_WhenAssertingValuesCountWithAllArgumentsSatisfied_ThenNoErrorIsReturne
 
 func Test_WhenAssertingValuesCountWithUnsatisfiedArguments_ThenErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	repo.DefineArgument(1, 2, "ARGUMENT1", `[a-z]+`, "description")
-	repo.DefineArgument(1, 2, "ARGUMENT2", `\d`, "description")
+	repo.DefineArgument("ARGUMENT1", "description", 1, 2, `[a-z]+`)
+	repo.DefineArgument("ARGUMENT2", "description", 1, 2, `\d`)
 	repo.AddArgumentValue("2")
 	err := repo.AssertAllArgumentValuesProvided()
 	if err == nil {

@@ -21,7 +21,7 @@ func Test_WhenComposingMainHelpSectionWithoutOptionsAndArguments_ThenOnlyTheAppN
 func Test_WhenComposingMainHelpSectionWithSingleOption_ThenOptionNotationIsIncluded(t *testing.T) {
 	appName := "app"
 	appDescr := "description"
-	options := []model.Option{model.NewOption("n", "name", "", "descr")}
+	options := []model.Option{model.NewOption("n", "name", "descr", "")}
 	expected := fmt.Sprintf("Usage: %s [OPTION]\n%s", appName, appDescr)
 	actual := util.GetMainHelpSection(appName, appDescr, &options, nil)
 	if actual != expected {
@@ -33,8 +33,8 @@ func Test_WhenComposingMainHelpSectionWithMultipleOptions_ThenOptionsNotationWit
 	appName := "app"
 	appDescr := "description"
 	options := []model.Option{
-		model.NewOption("n", "name", "", "descr"),
-		model.NewOption("", "other", "", "descr")}
+		model.NewOption("n", "name", "descr", ""),
+		model.NewOption("", "other", "descr", "")}
 	expected := fmt.Sprintf("Usage: %s [OPTIONS...]\n%s", appName, appDescr)
 	actual := util.GetMainHelpSection(appName, appDescr, &options, nil)
 	if actual != expected {
@@ -46,7 +46,7 @@ func Test_WhenComposingMainHelpSectionWithSingleValueArgument_ThenArgumentNameIs
 	appName := "app"
 	appDescr := "description"
 	argName := "ARG"
-	arguments := []model.Argument{model.NewArgument(1, 1, argName, "", "descr")}
+	arguments := []model.Argument{model.NewArgument(argName, "descr", 1, 1, "")}
 	expected := fmt.Sprintf("Usage: %s %s\n%s", appName, argName, appDescr)
 	actual := util.GetMainHelpSection("app", "description", nil, &arguments)
 	if actual != expected {
@@ -58,7 +58,7 @@ func Test_WhenComposingMainHelpSectionWithMultiValueArgument_ThenArgumentNameWit
 	appName := "app"
 	appDescr := "description"
 	argName := "ARG"
-	arguments := []model.Argument{model.NewArgument(1, 2, argName, "", "descr")}
+	arguments := []model.Argument{model.NewArgument(argName, "descr", 1, 2, "")}
 	expected := fmt.Sprintf("Usage: %s %s...\n%s", appName, argName, appDescr)
 	actual := util.GetMainHelpSection(appName, appDescr, nil, &arguments)
 	if actual != expected {
@@ -72,8 +72,8 @@ func Test_WhenComposingMainHelpSectionWithTwoArguments_ThenBothArgumentNamesAreI
 	argName1 := "ARG1"
 	argName2 := "ARG2"
 	arguments := []model.Argument{
-		model.NewArgument(1, 1, argName1, "", "descr"),
-		model.NewArgument(1, 1, argName2, "", "descr")}
+		model.NewArgument(argName1, "descr", 1, 1, ""),
+		model.NewArgument(argName2, "descr", 1, 1, "")}
 	expected := fmt.Sprintf("Usage: %s %s %s\n%s", appName, argName1, argName2, appDescr)
 	actual := util.GetMainHelpSection("app", "description", nil, &arguments)
 	if actual != expected {
@@ -85,8 +85,8 @@ func Test_WhenComposingMainHelpSectionWithOptionsAndArguments_ThenBothOptionNota
 	appName := "app"
 	appDescr := "description"
 	argName := "ARG"
-	options := []model.Option{model.NewOption("n", "name", "", "descr")}
-	arguments := []model.Argument{model.NewArgument(1, 1, argName, "", "descr")}
+	options := []model.Option{model.NewOption("n", "name", "descr", "")}
+	arguments := []model.Argument{model.NewArgument(argName, "descr", 1, 1, "")}
 	expected := fmt.Sprintf("Usage: %s [OPTION] %s\n%s", appName, argName, appDescr)
 	actual := util.GetMainHelpSection("app", "description", &options, &arguments)
 	if actual != expected {

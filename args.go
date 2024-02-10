@@ -53,8 +53,9 @@ func DefineOption(name string, description string) {
 // If a pattern is given, then any user provided value for this option must
 // match it. Empty string patterns are allowed and will not constrain the input.
 //
-// Passing the option name alone, without a corresponding value, is treated the
-// same way as would the value "true" have been passed along.
+// If the caller passes the option name alone (short or long), without a giving
+// corresponding value, the library will treat it the same way as would the
+// value "true" have been passed along.
 //
 // If the caller passes multiple instances of the same option with different
 // values, the library will print a help text and exit the application
@@ -63,7 +64,7 @@ func DefineOption(name string, description string) {
 // If the caller passes a value that doesn't match the given pattern, the
 // library will print a help text and exit the application gracefully.
 func DefineConstrainedOption(shortName string, longName string, description string, pattern string) {
-	err := getRepository().DefineOption(shortName, longName, pattern, description)
+	err := getRepository().DefineOption(shortName, longName, description, pattern)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -75,11 +76,15 @@ func DefineConstrainedOption(shortName string, longName string, description stri
 //
 // See DefineConstrainedArgument for more details.
 func DefineArgument(name string, description string) {
-	DefineConstrainedArgument(name, description, "", 1, 1)
+	DefineConstrainedArgument(name, description, 1, 1, "")
 }
 
 // DefineConstrainedArgument allows the developer to define more granular
 // mandatory arguments the caller must pass to the application.
+//
+// If minCount and maxCount is given the number of caller provided values will
+// be validated to be in that (inclusive) range. The minCount must be greater
+// than or equal to 1.
 //
 // If a pattern is given, then the caller provided input argument data will be
 // matched against it. This allows the caller to mix the order of input values.
@@ -92,14 +97,10 @@ func DefineArgument(name string, description string) {
 // If a pattern is given, it will be validated, causing the library to panic if
 // it's invalid.
 //
-// If minCount and maxCount is given the number of caller provided values will
-// be validated to be in that (inclusive) range. The minCount must be greater
-// than or equal to 1.
-//
 // If the caller fails to pass the constrained number of matching arguments,
 // the library will print a help text and exit the application gracefully.
-func DefineConstrainedArgument(name string, description string, pattern string, minCount int, maxCount int) {
-	err := getRepository().DefineArgument(minCount, maxCount, name, pattern, description)
+func DefineConstrainedArgument(name string, description string, minCount int, maxCount int, pattern string) {
+	err := getRepository().DefineArgument(name, description, minCount, maxCount, pattern)
 	if err != nil {
 		panic(err.Error())
 	}
