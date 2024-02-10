@@ -25,6 +25,8 @@ type DataCache interface {
 	AssertAllArgumentValuesProvided() error
 }
 
+type any = interface{}
+
 func NewDataCache() DataCache {
 	return &dataCache{
 		definitions: []any{},
@@ -37,8 +39,9 @@ type dataCache struct {
 }
 
 func (cache *dataCache) ClearValues() {
-	clear(cache.values)
+	cache.values = make(map[any][]string)
 }
+
 func (cache *dataCache) GetOptions() []model.Option {
 	var result []model.Option
 	for _, item := range cache.definitions {
