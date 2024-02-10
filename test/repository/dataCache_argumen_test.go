@@ -55,17 +55,17 @@ func Test_WhenDefiningArgumentContainingNonAlphaNumericLetters_ThenErrorIsReturn
 	}
 }
 
-func Test_WhenDefiningArgumentWithValidRegexPattern_ThenNoErrorIsReturned(t *testing.T) {
+func Test_WhenDefiningArgumentWithNoPattern_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(1, 1, "ARGUMENT", ".+", "description")
+	err := repo.DefineArgument(1, 1, "ARGUMENT", "", "description")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
 	}
 }
 
-func Test_WhenDefiningArgumentWithNoPattern_ThenNoErrorIsReturned(t *testing.T) {
+func Test_WhenDefiningArgumentWithValidRegexPattern_ThenNoErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
-	err := repo.DefineArgument(1, 1, "ARGUMENT", "", "description")
+	err := repo.DefineArgument(1, 1, "ARGUMENT", ".+", "description")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
 	}

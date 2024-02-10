@@ -30,6 +30,30 @@ func Test_WhenDefiningOptionWithSingleCharacterLongName_ThenErrorIsReturned(t *t
 	}
 }
 
+func Test_WhenDefiningOptionWithNoPattern_ThenNoErrorIsReturned(t *testing.T) {
+	repo := repository.NewDataCache()
+	err := repo.DefineOption("s", "short", "", "description")
+	if err != nil {
+		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
+	}
+}
+
+func Test_WhenDefiningOptionWithValidRegexPattern_ThenNoErrorIsReturned(t *testing.T) {
+	repo := repository.NewDataCache()
+	err := repo.DefineOption("s", "short", ".+", "description")
+	if err != nil {
+		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
+	}
+}
+
+func Test_WhenDefiningOptionWithInvalidRegexPattern_ThenErrorIsReturned(t *testing.T) {
+	repo := repository.NewDataCache()
+	err := repo.DefineOption("s", "short", "*", "description")
+	if err == nil {
+		t.Errorf("Expected <error>, but got <nil>")
+	}
+}
+
 func Test_WhenDefiningDuplicateOption_ThenErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
 	err1 := repo.DefineOption("s", "longName", "", "description")

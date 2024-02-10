@@ -178,3 +178,39 @@ func Test_WhenParsingRegisteredOptionWithValue_ThenTheValueCanBeRetrievedUndisto
 		t.Errorf("Expected <%s>, but got <%s>", expected, actual)
 	}
 }
+
+func Test_WhenDefiningArgumentsWithDifferentConstraints_ThenTheValuesDoNotGetMixedUp(t *testing.T) {
+	actualArgs := os.Args
+	defer func() { os.Args = actualArgs }()
+
+	os.Args = []string{"appName", "file1.txt", "2000", "file2.txt"}
+
+	args.Reset()
+	args.DefineConstrainedArgument("TIMEOUT", "description", `^\d+$`, 1, 1)
+	args.DefineConstrainedArgument("FILES", "description", `^*\.txt$`, 1, 2)
+	args.Parse()
+	n := args.GetArgumentIntValues("TIMEOUT")
+	s := args.GetArgumentValues("FILES")
+
+	if len(n) != 1 || n[0] != 2000 || len(s) != 2 || s[0] != "file1.txt" || s[1] != "file2.txt" {
+		t.Errorf("Expected <[2000]> and <[file1.txt file2.txt]>, but got <%v> and <%v>", n, s)
+	}
+}
+
+func Test_WhenHavingMultipleMatchingArguments_ThenTheValuesAreDistributedInOrderOfDefinition(t *testing.T) {
+	actualArgs := os.Args
+	defer func() { os.Args = actualArgs }()
+
+	os.Args = []string{"appName", "A", "b"}
+
+	args.Reset()
+	args.DefineArgument("LOWER-CASE", "description")
+	args.DefineArgument("UPPER-CASE", "description")
+	args.Parse()
+	upper := args.GetArgumentValues("UPPER-CASE")
+	lower := args.GetArgumentValues("LOWER-CASE")
+
+	if len(lower) != 1 || lower[0] != "A" || len(upper) != 1 || upper[0] != "b" {
+		t.Errorf("Expected <[A]> and <[b]>, but got <%v> and <%v>", lower, upper)
+	}
+}
