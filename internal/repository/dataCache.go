@@ -27,26 +27,36 @@ type DataCache interface {
 
 func NewDataCache() DataCache {
 	return &dataCache{
-		options:   []model.Option{},
-		arguments: []model.Argument{},
-		values:    make(map[any][]string)}
+		definitions: []any{},
+		values:      make(map[any][]string)}
 }
 
 type dataCache struct {
-	options   []model.Option
-	arguments []model.Argument
-	values    map[any][]string
+	definitions []any
+	values      map[any][]string
 }
 
 func (cache *dataCache) ClearValues() {
 	clear(cache.values)
 }
 func (cache *dataCache) GetOptions() []model.Option {
-	return cache.options
+	var result []model.Option
+	for _, item := range cache.definitions {
+		if option, isOption := item.(model.Option); isOption {
+			result = append(result, option)
+		}
+	}
+	return result
 }
 
 func (cache *dataCache) GetArguments() []model.Argument {
-	return cache.arguments
+	var result []model.Argument
+	for _, item := range cache.definitions {
+		if argument, isArgument := item.(model.Argument); isArgument {
+			result = append(result, argument)
+		}
+	}
+	return result
 }
 
 func (cache *dataCache) DefineOption(shortName string, longName string, description string, pattern string) error {
@@ -59,10 +69,10 @@ func (cache *dataCache) DefineOption(shortName string, longName string, descript
 		result = fmt.Errorf("unexpected long name: %s", longName)
 	} else if !isValidRegularExpression(pattern) {
 		result = fmt.Errorf("unexpected option value pattern: %s", pattern)
-	} else if isOptionAlreadyDefined(shortName, longName, &cache.options) {
+	} else if isOptionAlreadyDefined(shortName, longName, &cache.definitions) {
 		result = fmt.Errorf("option already defined: %s, %s", shortName, longName)
 	} else {
-		cache.options = append(cache.options, model.NewOption(shortName, longName, description, pattern))
+		cache.definitions = append(cache.definitions, model.NewOption(shortName, longName, description, pattern))
 	}
 
 	return result
@@ -70,8 +80,9 @@ func (cache *dataCache) DefineOption(shortName string, longName string, descript
 
 func (cache *dataCache) IsValidOptionValue(name string, value string) bool {
 	var result = false
-	option := findOption(name, &cache.options)
-	if option != nil {
+	if !isValidOptionShortName(name) && !isValidOptionLongName(name) {
+		result = false
+	} else if option := findOption(name, &cache.definitions); option != nil {
 		result = canSaveOptionValue(option, value, &cache.values)
 	}
 	return result
@@ -79,7 +90,7 @@ func (cache *dataCache) IsValidOptionValue(name string, value string) bool {
 
 func (cache *dataCache) SetOptionParsed(name string) error {
 	var result error = nil
-	option := findOption(name, &cache.options)
+	option := findOption(name, &cache.definitions)
 	if option == nil {
 		result = fmt.Errorf("unknown option: %s", name)
 	} else {
@@ -90,7 +101,7 @@ func (cache *dataCache) SetOptionParsed(name string) error {
 
 func (cache *dataCache) SetOptionValue(name string, value string) error {
 	var result error = nil
-	option := findOption(name, &cache.options)
+	option := findOption(name, &cache.definitions)
 	if option == nil {
 		result = fmt.Errorf("unknown option: %s", name)
 	} else if !canSaveOptionValue(option, value, &cache.values) {
@@ -104,7 +115,7 @@ func (cache *dataCache) SetOptionValue(name string, value string) error {
 
 func (cache *dataCache) GetOptionValue(name string) string {
 	var result = ""
-	option := findOption(name, &cache.options)
+	option := findOption(name, &cache.definitions)
 	if option != nil {
 		values, hasValue := cache.values[option]
 		if hasValue {
@@ -125,10 +136,10 @@ func (cache *dataCache) DefineArgument(name string, description string, min int,
 		result = fmt.Errorf("unexpected argument name: %s", name)
 	} else if !isValidRegularExpression(pattern) {
 		result = fmt.Errorf("unexpected argument value pattern: %s", pattern)
-	} else if isArgumentAlreadyDefined(name, &cache.arguments) {
+	} else if isArgumentAlreadyDefined(name, &cache.definitions) {
 		result = fmt.Errorf("argument already defined: %s", name)
 	} else {
-		cache.arguments = append(cache.arguments, model.NewArgument(name, description, min, max, pattern))
+		cache.definitions = append(cache.definitions, model.NewArgument(name, description, min, max, pattern))
 	}
 
 	return result
@@ -136,8 +147,10 @@ func (cache *dataCache) DefineArgument(name string, description string, min int,
 
 func (cache *dataCache) IsValidArgumentValue(value string) bool {
 	var result = false
-	for _, argument := range cache.arguments {
-		if canSaveArgumentValue(argument, value, &cache.values) {
+	for _, item := range cache.definitions {
+		if argument, isArgument := item.(model.Argument); !isArgument {
+			continue
+		} else if canSaveArgumentValue(argument, value, &cache.values) {
 			result = true
 			break
 		}
@@ -147,8 +160,10 @@ func (cache *dataCache) IsValidArgumentValue(value string) bool {
 
 func (cache *dataCache) AddArgumentValue(value string) error {
 	var result = fmt.Errorf("unexpected argument value: %s", value)
-	for _, argument := range cache.arguments {
-		if canSaveArgumentValue(argument, value, &cache.values) {
+	for _, item := range cache.definitions {
+		if argument, isArgument := item.(model.Argument); !isArgument {
+			continue
+		} else if canSaveArgumentValue(argument, value, &cache.values) {
 			values, hasValues := cache.values[argument]
 			if !hasValues {
 				cache.values[argument] = []string{value}
@@ -165,7 +180,7 @@ func (cache *dataCache) AddArgumentValue(value string) error {
 
 func (cache *dataCache) GetArgumentValues(name string) []string {
 	var result []string
-	argument := findArgument(name, &cache.arguments)
+	argument := findArgument(name, &cache.definitions)
 	if argument != nil {
 		values, hasValues := cache.values[argument]
 		if hasValues {
@@ -178,10 +193,12 @@ func (cache *dataCache) GetArgumentValues(name string) []string {
 func (cache *dataCache) AssertAllArgumentValuesProvided() error {
 	var result error = nil
 	var missing = []string{}
-	for _, argument := range cache.arguments {
-		values := cache.values[argument]
-		if len(values) < argument.GetMinValuesCount() {
-			missing = append(missing, argument.GetName())
+	for _, item := range cache.definitions {
+		if argument, isArgument := item.(model.Argument); isArgument {
+			values := cache.values[argument]
+			if len(values) < argument.GetMinValuesCount() {
+				missing = append(missing, argument.GetName())
+			}
 		}
 	}
 	if len(missing) > 0 {
@@ -191,11 +208,18 @@ func (cache *dataCache) AssertAllArgumentValuesProvided() error {
 	return result
 }
 
-func findOption(name string, options *[]model.Option) model.Option {
+func findOption(name string, definitions *[]any) model.Option {
+	return findOptionAny(name, name, definitions)
+}
+
+func findOptionAny(shortName string, longName string, definitions *[]any) model.Option {
 	var result model.Option = nil
-	name = strings.Trim(name, " -")
-	for _, option := range *options {
-		if option.GetShortName() == name || option.GetLongName() == name {
+	shortName = strings.Trim(shortName, " -")
+	longName = strings.Trim(longName, " -")
+	for _, item := range *definitions {
+		if option, isOption := item.(model.Option); !isOption {
+			continue
+		} else if option.GetShortName() == shortName || option.GetLongName() == longName {
 			result = option
 			break
 		}
@@ -203,11 +227,13 @@ func findOption(name string, options *[]model.Option) model.Option {
 	return result
 }
 
-func findArgument(name string, arguments *[]model.Argument) model.Argument {
+func findArgument(name string, definitions *[]any) model.Argument {
 	var result model.Argument = nil
 	name = strings.Trim(name, " -")
-	for _, argument := range *arguments {
-		if argument.GetName() == name {
+	for _, item := range *definitions {
+		if argument, isArgument := item.(model.Argument); !isArgument {
+			continue
+		} else if argument.GetName() == name {
 			result = argument
 			break
 		}
@@ -227,15 +253,8 @@ func isValidOptionLongName(name string) bool {
 	return configuration.OptionLongNamePattern.MatchString(name)
 }
 
-func isOptionAlreadyDefined(shortName string, longName string, options *[]model.Option) bool {
-	var hasOption = false
-	for _, option := range *options {
-		if option.GetShortName() == shortName || option.GetLongName() == longName {
-			hasOption = true
-			break
-		}
-	}
-	return hasOption
+func isOptionAlreadyDefined(shortName string, longName string, definitions *[]any) bool {
+	return findOptionAny(shortName, longName, definitions) != nil
 }
 
 func isValidArgumentCountRange(min int, max int) bool {
@@ -247,15 +266,8 @@ func isValidRegularExpression(pattern string) bool {
 	return err == nil
 }
 
-func isArgumentAlreadyDefined(helpLabel string, arguments *[]model.Argument) bool {
-	var hasArgument = false
-	for _, argument := range *arguments {
-		if argument.GetName() == helpLabel {
-			hasArgument = true
-			break
-		}
-	}
-	return hasArgument
+func isArgumentAlreadyDefined(name string, definitions *[]any) bool {
+	return findArgument(name, definitions) != nil
 }
 
 func canSaveOptionValue(option model.Option, value string, values *map[any][]string) bool {

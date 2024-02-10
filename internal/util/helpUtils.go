@@ -57,7 +57,7 @@ func GetOptionsHelpSection(options *[]model.Option) string {
 			stringBuilder.WriteString(longText)
 
 			description := option.GetDescription()
-			stringBuilder.WriteString(" " + description)
+			stringBuilder.WriteString("  " + description)
 		}
 	}
 
@@ -78,7 +78,7 @@ func GetArgumentsHelpSection(arguments *[]model.Argument) string {
 			stringBuilder.WriteString(text)
 
 			description := argument.GetDescription()
-			stringBuilder.WriteString(" " + description)
+			stringBuilder.WriteString("  " + description)
 		}
 	}
 

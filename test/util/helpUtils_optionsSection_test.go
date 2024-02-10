@@ -25,7 +25,7 @@ func Test_WhenComposingOptionsHelpSectionWithEmptyOptions_ThenEmptyStringIsRetur
 }
 
 func Test_WhenComposingOptionsHelpSectionWithoutShortName_ThenShortNameColumnIsNotIncluded(t *testing.T) {
-	expected := "Options:\n  --name description"
+	expected := "Options:\n  --name  description"
 	options := []model.Option{model.NewOption("", "name", "description", "")}
 	actual := util.GetOptionsHelpSection(&options)
 	if actual != expected {
@@ -34,7 +34,7 @@ func Test_WhenComposingOptionsHelpSectionWithoutShortName_ThenShortNameColumnIsN
 }
 
 func Test_WhenComposingOptionsHelpSectionWithoutLongName_ThenLongNameColumnIsNotIncluded(t *testing.T) {
-	expected := "Options:\n  -n description"
+	expected := "Options:\n  -n  description"
 	options := []model.Option{model.NewOption("n", "", "description", "")}
 	actual := util.GetOptionsHelpSection(&options)
 	if actual != expected {
@@ -43,7 +43,7 @@ func Test_WhenComposingOptionsHelpSectionWithoutLongName_ThenLongNameColumnIsNot
 }
 
 func Test_WhenComposingOptionsHelpSectionWithShortAndLongNames_ThenBothColumnsAreIncluded(t *testing.T) {
-	expected := "Options:\n  -n, --name description"
+	expected := "Options:\n  -n, --name  description"
 	options := []model.Option{model.NewOption("n", "name", "description", "")}
 	actual := util.GetOptionsHelpSection(&options)
 	if actual != expected {
@@ -54,9 +54,9 @@ func Test_WhenComposingOptionsHelpSectionWithShortAndLongNames_ThenBothColumnsAr
 func Test_WhenComposingOptionsHelpSectionWithMultipleOptions_ThenEachOptionIsIncludedOnItsOwnRow(t *testing.T) {
 	var stringBuilder strings.Builder
 	stringBuilder.WriteString("Options:\n")
-	stringBuilder.WriteString("  -n, --name  Name description\n")
-	stringBuilder.WriteString("      --value Value description\n")
-	stringBuilder.WriteString("  -s          Status description")
+	stringBuilder.WriteString("  -n, --name   Name description\n")
+	stringBuilder.WriteString("      --value  Value description\n")
+	stringBuilder.WriteString("  -s           Status description")
 	expected := stringBuilder.String()
 	options := []model.Option{
 		model.NewOption("n", "name", "Name description", ""),

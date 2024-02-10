@@ -27,8 +27,8 @@ func Test_WhenComposingArgumentsHelpSectionWithEmptyArguments_ThenEmptyStringIsR
 func Test_WhenComposingArgumentsHelpSectionWithMultipleArguments_ThenEachArgumentIsIncludedOnItsOwnRow(t *testing.T) {
 	var stringBuilder strings.Builder
 	stringBuilder.WriteString("Arguments:\n")
-	stringBuilder.WriteString("  ARGUMENT First argument description\n")
-	stringBuilder.WriteString("  ARGS     Second argument description")
+	stringBuilder.WriteString("  ARGUMENT  First argument description\n")
+	stringBuilder.WriteString("  ARGS      Second argument description")
 	expected := stringBuilder.String()
 	arguments := []model.Argument{
 		model.NewArgument("ARGUMENT", "First argument description", 1, 1, ""),
