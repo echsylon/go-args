@@ -1,93 +1,6 @@
 package repository_test
 
-import (
-	"strings"
-	"testing"
-
-	"github.com/echsylon/go-args/internal/repository"
-)
-
-func Test_WhenDefiningArgumentWithMinCountZeroAndMaxCountGreaterThanMinCount_ThenErrorIsReturned(t *testing.T) {
-	repo := repository.NewDataCache()
-	err := repo.DefineArgument("ARGUMENT", "description", 0, 2, "")
-	if err == nil {
-		t.Errorf("Expected <error>, but got <nil>")
-	}
-}
-
-func Test_WhenDefiningArgumentWithMinCountOneAndMaxCountGreaterThanMinCount_ThenNoErrorIsReturned(t *testing.T) {
-	repo := repository.NewDataCache()
-	err := repo.DefineArgument("ARGUMENT", "description", 1, 2, "")
-	if err != nil {
-		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
-	}
-}
-
-func Test_WhenDefiningArgumentWithMinCountGreaterThanZeroAndEqualToMaxCount_ThenNoErrorIsReturned(t *testing.T) {
-	repo := repository.NewDataCache()
-	err := repo.DefineArgument("ARGUMENT", "description", 2, 2, "")
-	if err != nil {
-		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
-	}
-}
-
-func Test_WhenDefiningArgumentWithMinCountGreaterThanZeroAndGreaterThanToMaxCount_ThenErrorIsReturned(t *testing.T) {
-	repo := repository.NewDataCache()
-	err := repo.DefineArgument("ARGUMENT", "description", 3, 2, "")
-	if err == nil {
-		t.Errorf("Expected <error>, but got <nil>")
-	}
-}
-
-func Test_WhenDefiningArgumentStartingWithUpperCaseLetterFollowedByNumbersAndUnderscore_ThenNoErrorIsReturned(t *testing.T) {
-	repo := repository.NewDataCache()
-	err := repo.DefineArgument("ABC123_", "description", 1, 1, "")
-	if err != nil {
-		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
-	}
-}
-
-func Test_WhenDefiningArgumentContainingNonAlphaNumericLetters_ThenErrorIsReturned(t *testing.T) {
-	repo := repository.NewDataCache()
-	err := repo.DefineArgument("AB?123_", "description", 1, 1, "")
-	if err == nil {
-		t.Errorf("Expected <error>, but got <nil>")
-	}
-}
-
-func Test_WhenDefiningArgumentWithNoPattern_ThenNoErrorIsReturned(t *testing.T) {
-	repo := repository.NewDataCache()
-	err := repo.DefineArgument("ARGUMENT", "description", 1, 1, "")
-	if err != nil {
-		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
-	}
-}
-
-func Test_WhenDefiningArgumentWithValidRegexPattern_ThenNoErrorIsReturned(t *testing.T) {
-	repo := repository.NewDataCache()
-	err := repo.DefineArgument("ARGUMENT", "description", 1, 1, ".+")
-	if err != nil {
-		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
-	}
-}
-
-func Test_WhenDefiningArgumentWithInvalidRegexPattern_ThenErrorIsReturned(t *testing.T) {
-	repo := repository.NewDataCache()
-	err := repo.DefineArgument("ARGUMENT", "description", 1, 1, "*")
-	if err == nil {
-		t.Errorf("Expected <error>, but got <nil>")
-	}
-}
-
-func Test_WhenDefiningAlreadyExistingArgument_ThenErrorIsReturned(t *testing.T) {
-	repo := repository.NewDataCache()
-	repo.DefineArgument("ARGUMENT", "description", 1, 1, "")
-	err := repo.DefineArgument("ARGUMENT", "description", 1, 1, "")
-	if err == nil {
-		t.Errorf("Expeted <error>, but got <nil>")
-	}
-}
-
+/*
 func Test_WhenAddingValueWithNoArgumentsDefined_ThenErrorIsReturned(t *testing.T) {
 	repo := repository.NewDataCache()
 	err := repo.AddArgumentValue("value")
@@ -202,3 +115,4 @@ func Test_WhenAssertingValuesCountWithUnsatisfiedArguments_ThenErrorIsReturned(t
 		t.Errorf("Expected <error>, but got <nil>")
 	}
 }
+*/

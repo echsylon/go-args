@@ -1,4 +1,4 @@
-package args
+package args_test
 
 import (
 	"os"
