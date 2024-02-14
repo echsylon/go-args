@@ -8,19 +8,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/echsylon/go-args/internal/domain"
 	"github.com/echsylon/go-args/internal/repository"
 	"github.com/echsylon/go-args/internal/util"
 )
 
-var dataCache repository.DataCache = nil
+var state = domain.NewStateMachine(os.Args[0], "", repository.NewDataCache())
 
-// Name of the application. Defaults to the first fraction in the OS provided
-// arguments list. This field will only be shown in the help text.
-var Name string = os.Args[0]
-
-// Description of the application. Defaults to empty-string. This field will
-// only be shown in the help text.
-var Description string
+func SetApplicationDescription(text string) {
+	state.SetDescription(text)
+}
 
 // DefineOption allows the developer to define a default optional command line
 // argument the caller can pass to the application.
@@ -64,9 +61,9 @@ func DefineOption(name string, description string) {
 // If the caller passes a value that doesn't match the given pattern, the
 // library will print a help text and exit the application gracefully.
 func DefineOptionStrict(shortName string, longName string, description string, pattern string) {
-	err := getRepository().DefineOption(shortName, longName, description, pattern)
+	err := state.DefineOption(shortName, longName, description, pattern)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 }
 
@@ -100,9 +97,9 @@ func DefineArgument(name string, description string) {
 // If the caller fails to pass the constrained number of matching arguments,
 // the library will print a help text and exit the application gracefully.
 func DefineArgumentStrict(name string, description string, minCount int, maxCount int, pattern string) {
-	err := getRepository().DefineArgument(name, description, minCount, maxCount, pattern)
+	err := state.DefineArgument(name, description, minCount, maxCount, pattern)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 }
 
@@ -119,39 +116,8 @@ func DefineArgumentStrict(name string, description string, minCount int, maxCoun
 // - After all input is parsed and there are defined mandatory arguments that
 // hasn't received the minimum number of input values.
 func Parse() {
-	var currentOptionName string = ""
-	var cache = getRepository()
-	var input = getInput()
-
-	cache.ClearValues()
-
-	for _, data := range input {
-		if isPotentialOptionName(data) {
-			if err := cache.SetOptionParsed(data); err != nil {
-				exitWithHelpMessage(err)
-			} else {
-				currentOptionName = data
-			}
-		} else if cache.IsValidOptionValue(currentOptionName, data) {
-			if err := cache.SetOptionValue(currentOptionName, data); err != nil {
-				exitWithHelpMessage(err)
-			} else {
-				currentOptionName = ""
-			}
-		} else if cache.IsValidArgumentValue(data) {
-			if err := cache.AddArgumentValue(data); err != nil {
-				exitWithHelpMessage(err)
-			} else {
-				currentOptionName = ""
-			}
-		} else {
-			err := fmt.Errorf("unexpected input: " + data)
-			exitWithHelpMessage(err)
-		}
-	}
-
-	if err := cache.AssertAllArgumentValuesProvided(); err != nil {
-		exitWithHelpMessage(err)
+	if err := state.Parse(); err != nil {
+		exitWithHelpMessage(err, state)
 	}
 }
 
@@ -159,7 +125,7 @@ func Parse() {
 // string. If there is no value for the option, the fallback is returned
 // instead.
 func GetOptionValue(name string, fallback string) string {
-	result := getRepository().GetOptionValue(name)
+	result := state.GetOptionValue(name)
 	if result == "" {
 		result = fallback
 	}
@@ -170,7 +136,7 @@ func GetOptionValue(name string, fallback string) string {
 // 64 bit integer. If there is no value for the option, the fallback is
 // returned instead.
 func GetOptionIntValue(name string, fallback int64) int64 {
-	value := getRepository().GetOptionValue(name)
+	value := state.GetOptionValue(name)
 	result, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
 		result = fallback
@@ -182,7 +148,7 @@ func GetOptionIntValue(name string, fallback int64) int64 {
 // 64 bit floating point number. If there is no value for the option, the
 // fallback is returned instead.
 func GetOptionFloatValue(name string, fallback float64) float64 {
-	value := getRepository().GetOptionValue(name)
+	value := state.GetOptionValue(name)
 	result, err := strconv.ParseFloat(value, 64)
 	if err != nil {
 		result = fallback
@@ -194,7 +160,7 @@ func GetOptionFloatValue(name string, fallback float64) float64 {
 // boolean. If there is no value for the option, the fallback is returned
 // instead.
 func GetOptionBoolValue(name string, fallback bool) bool {
-	value := getRepository().GetOptionValue(name)
+	value := state.GetOptionValue(name)
 	result, err := strconv.ParseBool(value)
 	if err != nil {
 		result = fallback
@@ -205,14 +171,14 @@ func GetOptionBoolValue(name string, fallback bool) bool {
 // GetArgumentValues returns all parsed mandatory values that matched the
 // defined argument.
 func GetArgumentValues(name string) []string {
-	return getRepository().GetArgumentValues(name)
+	return state.GetArgumentValues(name)
 }
 
 // GetArgumentIntValues returns all parsed mandatory values that matched
 // the defined argument and can be parsed into a 64 bit integer. Values
 // that can not be parsed are simply omitted.
 func GetArgumentIntValues(name string) []int64 {
-	values := getRepository().GetArgumentValues(name)
+	values := state.GetArgumentValues(name)
 	result := []int64{}
 	for _, value := range values {
 		if number, err := strconv.ParseInt(value, 10, 64); err == nil {
@@ -226,7 +192,7 @@ func GetArgumentIntValues(name string) []int64 {
 // the defined argument and can be parsed into a 64 bit floating point
 // number. Values that can not be parsed are simply omitted.
 func GetArgumentFloatValues(name string) []float64 {
-	values := getRepository().GetArgumentValues(name)
+	values := state.GetArgumentValues(name)
 	result := []float64{}
 	for _, value := range values {
 		if number, err := strconv.ParseFloat(value, 64); err == nil {
@@ -240,7 +206,7 @@ func GetArgumentFloatValues(name string) []float64 {
 // the defined argument and can be parsed into a boolean value. Values
 // that can not be parsed are simply omitted.
 func GetArgumentBoolValues(name string) []bool {
-	values := getRepository().GetArgumentValues(name)
+	values := state.GetArgumentValues(name)
 	result := []bool{}
 	for _, value := range values {
 		if state, err := strconv.ParseBool(value); err == nil {
@@ -253,35 +219,21 @@ func GetArgumentBoolValues(name string) []bool {
 // Reset will delete all previously configured options and arguments and
 // purge any corresponding parsed values.
 func Reset() {
-	dataCache = nil
+	state.Reset()
 }
 
-func getRepository() repository.DataCache {
-	if dataCache == nil {
-		dataCache = repository.NewDataCache()
-	}
-	return dataCache
-}
-
-func getInput() []string {
-	return os.Args[1:]
-}
-
-func isPotentialOptionName(data string) bool {
-	return strings.HasPrefix(data, "-")
-}
-
-func exitWithHelpMessage(message error) {
+func exitWithHelpMessage(message error, state domain.StateMachine) {
 	var stringBuilder strings.Builder
-	var cache = dataCache
-	var options = cache.GetOptions()
-	var arguments = cache.GetArguments()
+	var name = state.GetName()
+	var description = state.GetDescription()
+	var options = state.GetDefinedOptions()
+	var arguments = state.GetDefinedArguments()
 
 	if message != nil {
 		stringBuilder.WriteString(message.Error())
 	}
 
-	var mainSection = util.GetMainHelpSection(Name, Description, &options, &arguments)
+	var mainSection = util.GetMainHelpSection(name, description, &options, &arguments)
 	if mainSection != "" {
 		stringBuilder.WriteString("\n\n")
 		stringBuilder.WriteString(mainSection)
