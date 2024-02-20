@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/echsylon/go-args/internal/data"
 	"github.com/echsylon/go-args/internal/domain"
-	"github.com/echsylon/go-args/internal/repository"
 	"github.com/echsylon/go-args/internal/util"
 )
 
-var state = domain.NewStateMachine(os.Args[0], "", repository.NewDataCache())
+var state = domain.NewStateMachine(os.Args[0], "", data.NewRepository())
 
 func SetApplicationDescription(text string) {
 	state.SetDescription(text)
