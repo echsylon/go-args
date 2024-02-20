@@ -23,7 +23,7 @@ import (
 
 func main() {
 	// Make help text nice
-	args.Description = "The example app showcases how to use the go-args module."
+	args.SetApplicationDescription("A beautiful example app.")
 
 	// Define optional user input
 	args.DefineOption("m", "Max lines to read.") // simple short-name option with no filter
@@ -79,11 +79,11 @@ The output from the application would instead have been like so (since the `FILE
 Unexpected input: file3.txt
 
 Usage: ./xmpl [OPTIONS...] FILES... TIMEOUT
-The example app showcases how to use the go-args module.
+A beautiful example app.
 
 Arguments:
   FILES   Files to read from.
-  TIMEOUT Read timeout milliseconds
+  TIMEOUT Read timeout milliseconds.
 
 Options:
   -m            Max lines to read.
