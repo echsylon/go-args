@@ -1,10 +1,10 @@
-package repository
+package data
 
 import (
 	"github.com/echsylon/go-args/internal/model"
 )
 
-type DataCache interface {
+type Repository interface {
 	ClearAll()
 	ClearValues()
 	DefineOption(shortName string, longName string, description string, pattern string)
@@ -21,13 +21,13 @@ type DataCache interface {
 
 type any = interface{}
 
-func NewDataCache() DataCache {
-	return &dataCache{
+func NewRepository() Repository {
+	return &repository{
 		definitions: []any{},
 		values:      make(map[any][]string)}
 }
 
-type dataCache struct {
+type repository struct {
 	definitions []any
 	values      map[any][]string
 
@@ -40,20 +40,20 @@ type dataCache struct {
 	// order dependencies.
 }
 
-func (cache *dataCache) ClearAll() {
+func (cache *repository) ClearAll() {
 	cache.definitions = []any{}
 	cache.values = make(map[any][]string)
 }
 
-func (cache *dataCache) ClearValues() {
+func (cache *repository) ClearValues() {
 	cache.values = make(map[any][]string)
 }
 
-func (cache *dataCache) DefineOption(shortName string, longName string, description string, pattern string) {
+func (cache *repository) DefineOption(shortName string, longName string, description string, pattern string) {
 	cache.definitions = append(cache.definitions, model.NewOption(shortName, longName, description, pattern))
 }
 
-func (cache *dataCache) GetOptions() []model.Option {
+func (cache *repository) GetOptions() []model.Option {
 	var result []model.Option
 	for _, item := range cache.definitions {
 		if option, isOption := item.(model.Option); isOption {
@@ -63,17 +63,17 @@ func (cache *dataCache) GetOptions() []model.Option {
 	return result
 }
 
-func (cache *dataCache) GetOption(name string) model.Option {
+func (cache *repository) GetOption(name string) model.Option {
 	return findOption(name, name, &cache.definitions)
 }
 
-func (cache *dataCache) SetOptionValue(name string, value string) {
+func (cache *repository) SetOptionValue(name string, value string) {
 	if option := findOption(name, name, &cache.definitions); option != nil {
 		cache.values[option] = []string{value}
 	}
 }
 
-func (cache *dataCache) GetOptionValue(name string) string {
+func (cache *repository) GetOptionValue(name string) string {
 	var result = ""
 	option := findOption(name, name, &cache.definitions)
 	if option != nil {
@@ -85,11 +85,11 @@ func (cache *dataCache) GetOptionValue(name string) string {
 	return result
 }
 
-func (cache *dataCache) DefineArgument(name string, description string, min int, max int, pattern string) {
+func (cache *repository) DefineArgument(name string, description string, min int, max int, pattern string) {
 	cache.definitions = append(cache.definitions, model.NewArgument(name, description, min, max, pattern))
 }
 
-func (cache *dataCache) GetArguments() []model.Argument {
+func (cache *repository) GetArguments() []model.Argument {
 	var result []model.Argument
 	for _, item := range cache.definitions {
 		if argument, isArgument := item.(model.Argument); isArgument {
@@ -99,11 +99,11 @@ func (cache *dataCache) GetArguments() []model.Argument {
 	return result
 }
 
-func (cache *dataCache) GetArgument(name string) model.Argument {
+func (cache *repository) GetArgument(name string) model.Argument {
 	return findArgument(name, &cache.definitions)
 }
 
-func (cache *dataCache) AddArgumentValue(name string, value string) {
+func (cache *repository) AddArgumentValue(name string, value string) {
 	if argument := findArgument(name, &cache.definitions); argument != nil {
 		values, hasValues := cache.values[argument]
 		if !hasValues {
@@ -115,7 +115,7 @@ func (cache *dataCache) AddArgumentValue(name string, value string) {
 	}
 }
 
-func (cache *dataCache) GetArgumentValues(name string) []string {
+func (cache *repository) GetArgumentValues(name string) []string {
 	var result []string
 	argument := findArgument(name, &cache.definitions)
 	if argument != nil {

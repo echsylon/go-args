@@ -4,13 +4,13 @@ import (
 	"os"
 	"testing"
 
+	"github.com/echsylon/go-args/internal/data"
 	"github.com/echsylon/go-args/internal/domain"
 	"github.com/echsylon/go-args/internal/model"
-	"github.com/echsylon/go-args/internal/repository"
 )
 
-type mockDataCache struct {
-	repository.DataCache
+type mockRepository struct {
+	data.Repository
 	argumentsProvider     func() []model.Argument
 	argumentProvider      func() model.Argument
 	argumentValueProvider func() []string
@@ -21,20 +21,20 @@ type mockDataCache struct {
 	optionValueListener   func(string, string)
 }
 
-func (mock *mockDataCache) DefineArgument(string, string, int, int, string) {}
-func (mock *mockDataCache) GetArgument(string) model.Argument               { return mock.argumentProvider() }
-func (mock *mockDataCache) GetArguments() []model.Argument                  { return mock.argumentsProvider() }
-func (mock *mockDataCache) GetArgumentValues(string) []string               { return mock.argumentValueProvider() }
-func (mock *mockDataCache) AddArgumentValue(k string, v string)             { mock.argumentValueListener(k, v) }
-func (mock *mockDataCache) DefineOption(string, string, string, string)     {}
-func (mock *mockDataCache) GetOption(string) model.Option                   { return mock.optionProvider() }
-func (mock *mockDataCache) GetOptions() []model.Option                      { return mock.optionsProvider() }
-func (mock *mockDataCache) ClearValues()                                    {}
-func (mock *mockDataCache) SetOptionValue(k string, v string)               { mock.optionValueListener(k, v) }
-func (mock *mockDataCache) GetOptionValue(string) string                    { return mock.optionValueProvider() }
+func (mock *mockRepository) DefineArgument(string, string, int, int, string) {}
+func (mock *mockRepository) GetArgument(string) model.Argument               { return mock.argumentProvider() }
+func (mock *mockRepository) GetArguments() []model.Argument                  { return mock.argumentsProvider() }
+func (mock *mockRepository) GetArgumentValues(string) []string               { return mock.argumentValueProvider() }
+func (mock *mockRepository) AddArgumentValue(k string, v string)             { mock.argumentValueListener(k, v) }
+func (mock *mockRepository) DefineOption(string, string, string, string)     {}
+func (mock *mockRepository) GetOption(string) model.Option                   { return mock.optionProvider() }
+func (mock *mockRepository) GetOptions() []model.Option                      { return mock.optionsProvider() }
+func (mock *mockRepository) ClearValues()                                    {}
+func (mock *mockRepository) SetOptionValue(k string, v string)               { mock.optionValueListener(k, v) }
+func (mock *mockRepository) GetOptionValue(string) string                    { return mock.optionValueProvider() }
 
-func newEmptyMockDataCache() *mockDataCache {
-	return &mockDataCache{
+func newEmptyMockRepository() *mockRepository {
+	return &mockRepository{
 		argumentsProvider:     func() []model.Argument { return []model.Argument{} },
 		argumentProvider:      func() model.Argument { return nil },
 		argumentValueProvider: func() []string { return []string{} },
@@ -47,7 +47,7 @@ func newEmptyMockDataCache() *mockDataCache {
 }
 
 func Test_WhenDefiningOptionWithEmptyNames_ThenErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineOption("", "", "description", "")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
@@ -55,7 +55,7 @@ func Test_WhenDefiningOptionWithEmptyNames_ThenErrorIsReturned(t *testing.T) {
 }
 
 func Test_WhenDefiningOptionWithTwoCharacterShortName_ThenErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineOption("sn", "longName", "description", "")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
@@ -63,7 +63,7 @@ func Test_WhenDefiningOptionWithTwoCharacterShortName_ThenErrorIsReturned(t *tes
 }
 
 func Test_WhenDefiningOptionWithSingleCharacterLongName_ThenErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineOption("s", "l", "description", "")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
@@ -71,7 +71,7 @@ func Test_WhenDefiningOptionWithSingleCharacterLongName_ThenErrorIsReturned(t *t
 }
 
 func Test_WhenDefiningOptionWithNoPattern_ThenNoErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineOption("s", "short", "description", "")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
@@ -79,7 +79,7 @@ func Test_WhenDefiningOptionWithNoPattern_ThenNoErrorIsReturned(t *testing.T) {
 }
 
 func Test_WhenDefiningOptionWithValidRegexPattern_ThenNoErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineOption("s", "short", "description", ".+")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
@@ -87,7 +87,7 @@ func Test_WhenDefiningOptionWithValidRegexPattern_ThenNoErrorIsReturned(t *testi
 }
 
 func Test_WhenDefiningOptionWithInvalidRegexPattern_ThenErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineOption("s", "short", "description", "*")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
@@ -97,7 +97,7 @@ func Test_WhenDefiningOptionWithInvalidRegexPattern_ThenErrorIsReturned(t *testi
 func Test_WhenDefiningDuplicateOption_ThenErrorIsReturned(t *testing.T) {
 	option := model.NewOption("n", "name", "description", "")
 	provider := func() model.Option { return option }
-	state := domain.NewStateMachine("", "", &mockDataCache{optionProvider: provider})
+	state := domain.NewStateMachine("", "", &mockRepository{optionProvider: provider})
 	err := state.DefineOption("n", "name", "description", "")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
@@ -105,7 +105,7 @@ func Test_WhenDefiningDuplicateOption_ThenErrorIsReturned(t *testing.T) {
 }
 
 func Test_WhenDefiningArgumentWithInvalidCharacterInName_ThenErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineArgument("arg$", "description", 1, 1, "")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
@@ -113,7 +113,7 @@ func Test_WhenDefiningArgumentWithInvalidCharacterInName_ThenErrorIsReturned(t *
 }
 
 func Test_WhenDefiningArgumentWithMinCountZeroAndMaxCountGreaterThanMinCount_ThenErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineArgument("ARGUMENT", "description", 0, 2, "")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
@@ -121,7 +121,7 @@ func Test_WhenDefiningArgumentWithMinCountZeroAndMaxCountGreaterThanMinCount_The
 }
 
 func Test_WhenDefiningArgumentWithMinCountOneAndMaxCountGreaterThanMinCount_ThenNoErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineArgument("ARGUMENT", "description", 1, 2, "")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
@@ -129,7 +129,7 @@ func Test_WhenDefiningArgumentWithMinCountOneAndMaxCountGreaterThanMinCount_Then
 }
 
 func Test_WhenDefiningArgumentWithMinCountGreaterThanZeroAndEqualToMaxCount_ThenNoErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineArgument("ARGUMENT", "description", 2, 2, "")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
@@ -137,7 +137,7 @@ func Test_WhenDefiningArgumentWithMinCountGreaterThanZeroAndEqualToMaxCount_Then
 }
 
 func Test_WhenDefiningArgumentWithMinCountGreaterThanZeroAndGreaterThanToMaxCount_ThenErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineArgument("ARGUMENT", "description", 3, 2, "")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
@@ -145,7 +145,7 @@ func Test_WhenDefiningArgumentWithMinCountGreaterThanZeroAndGreaterThanToMaxCoun
 }
 
 func Test_WhenDefiningArgumentWithNoPattern_ThenNoErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineArgument("ARGUMENT", "description", 1, 1, "")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
@@ -153,7 +153,7 @@ func Test_WhenDefiningArgumentWithNoPattern_ThenNoErrorIsReturned(t *testing.T) 
 }
 
 func Test_WhenDefiningArgumentWithValidRegexPattern_ThenNoErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineArgument("ARGUMENT", "description", 1, 1, ".+")
 	if err != nil {
 		t.Errorf("Expected <nil>, but got <error>: %s", err.Error())
@@ -161,7 +161,7 @@ func Test_WhenDefiningArgumentWithValidRegexPattern_ThenNoErrorIsReturned(t *tes
 }
 
 func Test_WhenDefiningArgumentWithInvalidRegexPattern_ThenErrorIsReturned(t *testing.T) {
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.DefineArgument("ARGUMENT", "description", 1, 1, "*")
 	if err == nil {
 		t.Errorf("Expected <error>, but got <nil>")
@@ -171,7 +171,7 @@ func Test_WhenDefiningArgumentWithInvalidRegexPattern_ThenErrorIsReturned(t *tes
 func Test_WhenDefiningDuplicateArgument_ThenErrorIsReturned(t *testing.T) {
 	argument := model.NewArgument("ARGUMENT", "description", 1, 1, "")
 	provider := func() model.Argument { return argument }
-	state := domain.NewStateMachine("", "", &mockDataCache{argumentProvider: provider})
+	state := domain.NewStateMachine("", "", &mockRepository{argumentProvider: provider})
 	err := state.DefineArgument("ARGUMENT", "description", 1, 1, "")
 	if err == nil {
 		t.Errorf("Expeted <error>, but got <nil>")
@@ -183,7 +183,7 @@ func Test_WhenParsingUndefinedOption_ThenErrorIsReturned(t *testing.T) {
 	defer func() { os.Args = actualArgs }()
 
 	os.Args = []string{"appName", "--undefined"}
-	state := domain.NewStateMachine("", "", newEmptyMockDataCache())
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
 	err := state.Parse()
 
 	if err == nil {
@@ -203,11 +203,11 @@ func Test_WhenParsingDefinedOptionValue_ThenThatValueIsSaved(t *testing.T) {
 	actualName := ""
 	actualValue := ""
 
-	mockDataCache := newEmptyMockDataCache()
-	mockDataCache.optionProvider = func() model.Option { return option }
-	mockDataCache.optionValueListener = func(k string, v string) { actualName = k; actualValue = v }
+	mockRepository := newEmptyMockRepository()
+	mockRepository.optionProvider = func() model.Option { return option }
+	mockRepository.optionValueListener = func(k string, v string) { actualName = k; actualValue = v }
 
-	state := domain.NewStateMachine("", "", mockDataCache)
+	state := domain.NewStateMachine("", "", mockRepository)
 	state.Parse()
 
 	if actualName != expectedName || actualValue != expectedValue {
@@ -222,10 +222,10 @@ func Test_WhenParsingNonMatchingOptionValueWithoutArguments_ThenErrorIsReturned(
 	os.Args = []string{"appName", "--option", "12"}
 	option := model.NewOption("", "option", "description", `^(true|false)$`)
 
-	mockDataCache := newEmptyMockDataCache()
-	mockDataCache.optionProvider = func() model.Option { return option }
+	mockRepository := newEmptyMockRepository()
+	mockRepository.optionProvider = func() model.Option { return option }
 
-	state := domain.NewStateMachine("", "", mockDataCache)
+	state := domain.NewStateMachine("", "", mockRepository)
 	err := state.Parse()
 
 	if err == nil {
@@ -246,13 +246,13 @@ func Test_WhenParsingNonMatchingOptionValueWithArguments_ThenFirstMatchingArgume
 	actualOptionValue := ""
 	actualArgumentValue := ""
 
-	mockDataCache := newEmptyMockDataCache()
-	mockDataCache.optionProvider = func() model.Option { return option }
-	mockDataCache.argumentsProvider = func() []model.Argument { return []model.Argument{argument} }
-	mockDataCache.optionValueListener = func(string, v string) { actualOptionValue = v }
-	mockDataCache.argumentValueListener = func(string, v string) { actualArgumentValue = v }
+	mockRepository := newEmptyMockRepository()
+	mockRepository.optionProvider = func() model.Option { return option }
+	mockRepository.argumentsProvider = func() []model.Argument { return []model.Argument{argument} }
+	mockRepository.optionValueListener = func(string, v string) { actualOptionValue = v }
+	mockRepository.argumentValueListener = func(string, v string) { actualArgumentValue = v }
 
-	state := domain.NewStateMachine("", "", mockDataCache)
+	state := domain.NewStateMachine("", "", mockRepository)
 	state.Parse()
 
 	if actualOptionValue != expectedOptionValue || actualArgumentValue != expectedArgumentValue {
@@ -269,10 +269,10 @@ func Test_WhenRequestingValueForParsedOptionWithNoGivenValue_ThenBooleanTrueIsRe
 	option := model.NewOption("", "opt", "description", "")
 	option.SetParsed()
 
-	mockDataCache := newEmptyMockDataCache()
-	mockDataCache.optionProvider = func() model.Option { return option }
+	mockRepository := newEmptyMockRepository()
+	mockRepository.optionProvider = func() model.Option { return option }
 
-	state := domain.NewStateMachine("", "", mockDataCache)
+	state := domain.NewStateMachine("", "", mockRepository)
 	actual := state.GetOptionValue("opt")
 	expected := "true"
 

@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/echsylon/go-args/internal/configuration"
+	"github.com/echsylon/go-args/internal/data"
 	"github.com/echsylon/go-args/internal/model"
-	"github.com/echsylon/go-args/internal/repository"
 )
 
 type StateMachine interface {
@@ -26,14 +26,14 @@ type StateMachine interface {
 	Reset()
 }
 
-func NewStateMachine(name string, description string, data repository.DataCache) StateMachine {
+func NewStateMachine(name string, description string, data data.Repository) StateMachine {
 	return &stateMachine{name, description, data}
 }
 
 type stateMachine struct {
 	name        string
 	description string
-	data        repository.DataCache
+	data        data.Repository
 }
 
 func (state *stateMachine) SetName(name string) {
@@ -158,11 +158,11 @@ func isValidOptionLongName(name string) bool {
 	return configuration.OptionLongNamePattern.MatchString(name)
 }
 
-func isOptionAlreadyDefined(shortName string, longName string, data repository.DataCache) bool {
+func isOptionAlreadyDefined(shortName string, longName string, data data.Repository) bool {
 	return data.GetOption(shortName) != nil || data.GetOption(longName) != nil
 }
 
-func isExpectedOption(input string, data repository.DataCache) bool {
+func isExpectedOption(input string, data data.Repository) bool {
 	var result = false
 	if strings.HasPrefix(input, "-") {
 		name := strings.Trim(input, "-")
@@ -175,7 +175,7 @@ func isExpectedOption(input string, data repository.DataCache) bool {
 	return result
 }
 
-func isExpectedOptionValue(name string, input string, data repository.DataCache) bool {
+func isExpectedOptionValue(name string, input string, data data.Repository) bool {
 	var result = false
 	if option := data.GetOption(name); option != nil {
 		if value := data.GetOptionValue(name); value == "" {
@@ -197,11 +197,11 @@ func isValidArgumentName(name string) bool {
 	return configuration.ArgumentNamePattern.MatchString(name)
 }
 
-func isArgumentAlreadyDefined(name string, data repository.DataCache) bool {
+func isArgumentAlreadyDefined(name string, data data.Repository) bool {
 	return data.GetArgument(name) != nil
 }
 
-func findArgumentForValue(value string, data repository.DataCache) model.Argument {
+func findArgumentForValue(value string, data data.Repository) model.Argument {
 	var result model.Argument = nil
 	var arguments = data.GetArguments()
 	for _, argument := range arguments {
@@ -218,7 +218,7 @@ func findArgumentForValue(value string, data repository.DataCache) model.Argumen
 	return result
 }
 
-func getUnsatisfiedArguments(data repository.DataCache) []string {
+func getUnsatisfiedArguments(data data.Repository) []string {
 	var missing []string
 	var arguments = data.GetArguments()
 	for _, argument := range arguments {
