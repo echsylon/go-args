@@ -65,7 +65,7 @@ func (state *stateMachine) DefineOption(shortName string, longName string, descr
 	} else if isOptionAlreadyDefined(shortName, longName, state.data) {
 		result = fmt.Errorf("option already defined: %s, %s", shortName, longName)
 	} else {
-		state.data.DefineOption(shortName, longName, description, pattern)
+		state.data.SaveOption(shortName, longName, description, pattern)
 	}
 	return result
 }
@@ -94,7 +94,7 @@ func (state *stateMachine) DefineArgument(name string, description string, minCo
 	} else if isArgumentAlreadyDefined(name, state.data) {
 		result = fmt.Errorf("argument already defined: %s", name)
 	} else {
-		state.data.DefineArgument(name, description, minCount, maxCount, pattern)
+		state.data.SaveArgument(name, description, minCount, maxCount, pattern)
 	}
 
 	return result
@@ -120,10 +120,10 @@ func (state *stateMachine) Parse() error {
 			option := state.data.GetOption(currentOptionName)
 			option.SetParsed()
 		} else if isExpectedOptionValue(currentOptionName, data, state.data) {
-			state.data.SetOptionValue(currentOptionName, data)
+			state.data.SaveOptionValue(currentOptionName, data)
 			currentOptionName = ""
 		} else if argument := findArgumentForValue(data, state.data); argument != nil {
-			state.data.AddArgumentValue(argument.GetName(), data)
+			state.data.SaveArgumentValue(argument.GetName(), data)
 			currentOptionName = ""
 		} else {
 			result = fmt.Errorf("unexpected input: %s", data)
