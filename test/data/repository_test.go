@@ -15,6 +15,16 @@ func Test_WhenSavingAnOptionSuccessfully_ThenThatOptionCanBeRetrieved(t *testing
 	}
 }
 
+func Test_WhenSavingHelpOptionSuccessfully_ThenTheHelpOptionCanBeRetrieved(t *testing.T) {
+	repository := data.NewRepository()
+	repository.SaveHelpOption("h", "help", "description")
+	option := repository.GetOption("help")
+	actual := option.IsHelpTrigger()
+	if actual != true {
+		t.Errorf("Expected <true>, but got <%t>", actual)
+	}
+}
+
 func Test_WhenSavingMultipleOptionsSuccessfully_ThenThoseOptionsCanAllBeRetrieved(t *testing.T) {
 	repository := data.NewRepository()
 	repository.SaveOption("o", "one", "description", "")

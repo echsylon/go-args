@@ -8,6 +8,7 @@ type Repository interface {
 	ClearAll()
 	ClearValues()
 	SaveOption(shortName string, longName string, description string, pattern string)
+	SaveHelpOption(shortName string, longName string, description string)
 	GetOptions() []model.Option
 	GetOption(name string) model.Option
 	SaveOptionValue(name string, value string)
@@ -50,6 +51,10 @@ func (cache *repository) ClearValues() {
 
 func (cache *repository) SaveOption(shortName string, longName string, description string, pattern string) {
 	cache.definitions = append(cache.definitions, model.NewOption(shortName, longName, description, pattern))
+}
+
+func (cache *repository) SaveHelpOption(shortName string, longName string, description string) {
+	cache.definitions = append(cache.definitions, model.NewHelpOption(shortName, longName, description))
 }
 
 func (cache *repository) GetOptions() []model.Option {

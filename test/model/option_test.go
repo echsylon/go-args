@@ -23,6 +23,24 @@ func Test_WhenSettingTheParsedFlag_ThenIsParsedReturnsTrue(t *testing.T) {
 	}
 }
 
+func Test_WhenCreatingNewOption_ThenIsHelpTriggerReturnsFalse(t *testing.T) {
+	expected := false
+	opt := model.NewOption("n", "name", "description", "")
+	actual := opt.IsHelpTrigger()
+	if actual != expected {
+		t.Errorf("Expected <%t>, but got <%t>", expected, actual)
+	}
+}
+
+func Test_WhenCreatingNewHelpOption_ThenIsHelpTriggerReturnsTrue(t *testing.T) {
+	expected := true
+	opt := model.NewHelpOption("n", "name", "description")
+	actual := opt.IsHelpTrigger()
+	if actual != expected {
+		t.Errorf("Expected <%t>, but got <%t>", expected, actual)
+	}
+}
+
 func Test_WhenCreatingNewOption_ThenItsShortNameCanBeRetrievedUndistorted(t *testing.T) {
 	expected := "n"
 	opt := model.NewOption(expected, "name", "description", "")
