@@ -17,6 +17,16 @@ func Test_WhenRegisteringInvalidOption_ThenPanic(t *testing.T) {
 	args.DefineOptionStrict("shortName", "shortName", "description", "")
 }
 
+func Test_WhenRegisteringInvalidHelpOption_ThenPanic(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("<Expected <panic>, but got nothing")
+		}
+	}()
+
+	args.DefineOptionHelp("shortName", "shortName", "description")
+}
+
 func Test_WhenRegisteringInvalidArgument_ThenPanic(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {

@@ -94,6 +94,30 @@ func Test_WhenDefiningOptionWithInvalidRegexPattern_ThenErrorIsReturned(t *testi
 	}
 }
 
+func Test_WhenDefiningHelpOptionWithEmptyNames_ThenErrorIsReturned(t *testing.T) {
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
+	err := state.DefineHelpOption("", "", "description")
+	if err == nil {
+		t.Errorf("Expected <error>, but got <nil>")
+	}
+}
+
+func Test_WhenDefiningHelpOptionWithTwoCharacterShortName_ThenErrorIsReturned(t *testing.T) {
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
+	err := state.DefineHelpOption("sn", "longName", "description")
+	if err == nil {
+		t.Errorf("Expected <error>, but got <nil>")
+	}
+}
+
+func Test_WhenDefiningHelpOptionWithSingleCharacterLongName_ThenErrorIsReturned(t *testing.T) {
+	state := domain.NewStateMachine("", "", newEmptyMockRepository())
+	err := state.DefineHelpOption("s", "l", "description")
+	if err == nil {
+		t.Errorf("Expected <error>, but got <nil>")
+	}
+}
+
 func Test_WhenDefiningDuplicateOption_ThenErrorIsReturned(t *testing.T) {
 	option := model.NewOption("n", "name", "description", "")
 	provider := func() model.Option { return option }
@@ -262,6 +286,26 @@ func Test_WhenParsingNonMatchingOptionValueWithArguments_ThenFirstMatchingArgume
 			actualOptionValue,
 			actualArgumentValue,
 		)
+	}
+}
+
+func Test_WhenParsingHelpOption_ThenFurtherParsingIsAborted(t *testing.T) {
+	actualArgs := os.Args
+	defer func() { os.Args = actualArgs }()
+
+	os.Args = []string{"appName", "--help", "12"}
+	help := model.NewHelpOption("h", "help", "description")
+	value := ""
+
+	mockRepository := newEmptyMockRepository()
+	mockRepository.optionProvider = func() model.Option { return help }
+	mockRepository.optionValueListener = func(string, v string) { value = v }
+
+	state := domain.NewStateMachine("", "", mockRepository)
+	err := state.Parse()
+
+	if err == nil || value != "" {
+		t.Errorf("Expected <error> and <>, but got <nil> and <%s>", value)
 	}
 }
 

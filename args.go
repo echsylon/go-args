@@ -5,6 +5,7 @@ package args
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/echsylon/go-args/internal/util"
 )
 
-var state = domain.NewStateMachine(os.Args[0], "", data.NewRepository())
+var state = domain.NewStateMachine(filepath.Base(os.Args[0]), "", data.NewRepository())
 
 // SetApplicationDescription takes a human readable description of the app.
 // This text is only shown in the help output.
@@ -70,6 +71,27 @@ func DefineOption(name string, description string) {
 // application gracefully.
 func DefineOptionStrict(shortName string, longName string, description string, pattern string) {
 	err := state.DefineOption(shortName, longName, description, pattern)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// DefineOptionHelp allows the devleoper to define a graceful help trigger
+// option.
+//
+// At least a shortName or a longName must be given. Defining both is nice
+// but not functionally required. The shortName must be a single alphabetic
+// character matching the `^[a-zA-Z]{1}$` regular expression, while the
+// longName must be at least two alphabetic+ characters, matching the
+// `^[a-zA-Z-._]{2,}$` regular expression.
+//
+// The description, if given, is only shown in the help output.
+//
+// If a caller passes this option, the library will immediately abort parsing
+// and print the help text - without any error message (!) - and exit the
+// application gracefully.
+func DefineOptionHelp(shortName string, longName string, description string) {
+	err := state.DefineHelpOption(shortName, longName, description)
 	if err != nil {
 		panic(err)
 	}
@@ -236,20 +258,21 @@ func Reset() {
 	state.Reset()
 }
 
-func exitWithHelpMessage(message error, state domain.StateMachine) {
+func exitWithHelpMessage(err error, state domain.StateMachine) {
 	var stringBuilder strings.Builder
 	var name = state.GetName()
 	var description = state.GetDescription()
 	var options = state.GetDefinedOptions()
 	var arguments = state.GetDefinedArguments()
 
-	if message != nil {
-		stringBuilder.WriteString(message.Error())
+	var message = err.Error()
+	if message != "" {
+		stringBuilder.WriteString(message)
+		stringBuilder.WriteString("\n\n")
 	}
 
 	var mainSection = util.GetMainHelpSection(name, description, &options, &arguments)
 	if mainSection != "" {
-		stringBuilder.WriteString("\n\n")
 		stringBuilder.WriteString(mainSection)
 	}
 

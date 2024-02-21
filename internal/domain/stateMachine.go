@@ -17,6 +17,7 @@ type StateMachine interface {
 	SetDescription(description string)
 	GetDescription() string
 	DefineOption(shortName string, longName string, description string, pattern string) error
+	DefineHelpOption(shortName string, longName string, description string) error
 	GetDefinedOptions() []model.Option
 	GetOptionValue(name string) string
 	DefineArgument(name string, description string, minCount int, maxCount int, pattern string) error
@@ -70,6 +71,22 @@ func (state *stateMachine) DefineOption(shortName string, longName string, descr
 	return result
 }
 
+func (state *stateMachine) DefineHelpOption(shortName string, longName string, description string) error {
+	var result error = nil
+	if shortName == "" && longName == "" {
+		result = fmt.Errorf("no name given for option")
+	} else if shortName != "" && !isValidOptionShortName(shortName) {
+		result = fmt.Errorf("unexpected short name: %s", shortName)
+	} else if longName != "" && !isValidOptionLongName(longName) {
+		result = fmt.Errorf("unexpected long name: %s", longName)
+	} else if isOptionAlreadyDefined(shortName, longName, state.data) {
+		result = fmt.Errorf("option already defined: %s, %s", shortName, longName)
+	} else {
+		state.data.SaveHelpOption(shortName, longName, description)
+	}
+	return result
+}
+
 func (state *stateMachine) GetDefinedOptions() []model.Option {
 	return state.data.GetOptions()
 }
@@ -119,6 +136,10 @@ func (state *stateMachine) Parse() error {
 			currentOptionName = strings.Trim(data, "-")
 			option := state.data.GetOption(currentOptionName)
 			option.SetParsed()
+			if option.IsHelpTrigger() {
+				result = fmt.Errorf("")
+				break
+			}
 		} else if isExpectedOptionValue(currentOptionName, data, state.data) {
 			state.data.SaveOptionValue(currentOptionName, data)
 			currentOptionName = ""
