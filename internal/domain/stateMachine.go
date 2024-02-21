@@ -178,10 +178,12 @@ func isExpectedOption(input string, data data.Repository) bool {
 func isExpectedOptionValue(name string, input string, data data.Repository) bool {
 	var result = false
 	if option := data.GetOption(name); option != nil {
-		if value := data.GetOptionValue(name); value == "" {
-			if test, err := regexp.Compile(option.GetPattern()); err == nil {
-				if test.MatchString(value) {
-					result = true
+		if option.IsParsed() {
+			if value := data.GetOptionValue(name); value == "" {
+				if test, err := regexp.Compile(option.GetPattern()); err == nil {
+					if test.MatchString(value) {
+						result = true
+					}
 				}
 			}
 		}
