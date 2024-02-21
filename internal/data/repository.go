@@ -7,15 +7,15 @@ import (
 type Repository interface {
 	ClearAll()
 	ClearValues()
-	DefineOption(shortName string, longName string, description string, pattern string)
+	SaveOption(shortName string, longName string, description string, pattern string)
 	GetOptions() []model.Option
 	GetOption(name string) model.Option
-	SetOptionValue(name string, value string)
+	SaveOptionValue(name string, value string)
 	GetOptionValue(name string) string
-	DefineArgument(name string, description string, min int, max int, pattern string)
+	SaveArgument(name string, description string, min int, max int, pattern string)
 	GetArguments() []model.Argument
 	GetArgument(name string) model.Argument
-	AddArgumentValue(name string, value string)
+	SaveArgumentValue(name string, value string)
 	GetArgumentValues(name string) []string
 }
 
@@ -28,9 +28,6 @@ func NewRepository() Repository {
 }
 
 type repository struct {
-	definitions []any
-	values      map[any][]string
-
 	// !!! NOTE !!!
 	// We're intentionally separating the values map keys in
 	// to the definitions slice in order to maintain the order
@@ -38,6 +35,8 @@ type repository struct {
 	// keys in their map implementation, but they are also
 	// actively randomizing (ish) them to prevent implicit
 	// order dependencies.
+	definitions []any
+	values      map[any][]string
 }
 
 func (cache *repository) ClearAll() {
@@ -49,7 +48,7 @@ func (cache *repository) ClearValues() {
 	cache.values = make(map[any][]string)
 }
 
-func (cache *repository) DefineOption(shortName string, longName string, description string, pattern string) {
+func (cache *repository) SaveOption(shortName string, longName string, description string, pattern string) {
 	cache.definitions = append(cache.definitions, model.NewOption(shortName, longName, description, pattern))
 }
 
@@ -67,7 +66,7 @@ func (cache *repository) GetOption(name string) model.Option {
 	return findOption(name, name, &cache.definitions)
 }
 
-func (cache *repository) SetOptionValue(name string, value string) {
+func (cache *repository) SaveOptionValue(name string, value string) {
 	if option := findOption(name, name, &cache.definitions); option != nil {
 		cache.values[option] = []string{value}
 	}
@@ -85,7 +84,7 @@ func (cache *repository) GetOptionValue(name string) string {
 	return result
 }
 
-func (cache *repository) DefineArgument(name string, description string, min int, max int, pattern string) {
+func (cache *repository) SaveArgument(name string, description string, min int, max int, pattern string) {
 	cache.definitions = append(cache.definitions, model.NewArgument(name, description, min, max, pattern))
 }
 
@@ -103,7 +102,7 @@ func (cache *repository) GetArgument(name string) model.Argument {
 	return findArgument(name, &cache.definitions)
 }
 
-func (cache *repository) AddArgumentValue(name string, value string) {
+func (cache *repository) SaveArgumentValue(name string, value string) {
 	if argument := findArgument(name, &cache.definitions); argument != nil {
 		values, hasValues := cache.values[argument]
 		if !hasValues {

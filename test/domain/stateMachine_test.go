@@ -21,17 +21,17 @@ type mockRepository struct {
 	optionValueListener   func(string, string)
 }
 
-func (mock *mockRepository) DefineArgument(string, string, int, int, string) {}
-func (mock *mockRepository) GetArgument(string) model.Argument               { return mock.argumentProvider() }
-func (mock *mockRepository) GetArguments() []model.Argument                  { return mock.argumentsProvider() }
-func (mock *mockRepository) GetArgumentValues(string) []string               { return mock.argumentValueProvider() }
-func (mock *mockRepository) AddArgumentValue(k string, v string)             { mock.argumentValueListener(k, v) }
-func (mock *mockRepository) DefineOption(string, string, string, string)     {}
-func (mock *mockRepository) GetOption(string) model.Option                   { return mock.optionProvider() }
-func (mock *mockRepository) GetOptions() []model.Option                      { return mock.optionsProvider() }
-func (mock *mockRepository) ClearValues()                                    {}
-func (mock *mockRepository) SetOptionValue(k string, v string)               { mock.optionValueListener(k, v) }
-func (mock *mockRepository) GetOptionValue(string) string                    { return mock.optionValueProvider() }
+func (mock *mockRepository) SaveArgument(string, string, int, int, string) {}
+func (mock *mockRepository) GetArgument(string) model.Argument             { return mock.argumentProvider() }
+func (mock *mockRepository) GetArguments() []model.Argument                { return mock.argumentsProvider() }
+func (mock *mockRepository) GetArgumentValues(string) []string             { return mock.argumentValueProvider() }
+func (mock *mockRepository) SaveArgumentValue(k string, v string)          { mock.argumentValueListener(k, v) }
+func (mock *mockRepository) SaveOption(string, string, string, string)     {}
+func (mock *mockRepository) GetOption(string) model.Option                 { return mock.optionProvider() }
+func (mock *mockRepository) GetOptions() []model.Option                    { return mock.optionsProvider() }
+func (mock *mockRepository) ClearValues()                                  {}
+func (mock *mockRepository) SaveOptionValue(k string, v string)            { mock.optionValueListener(k, v) }
+func (mock *mockRepository) GetOptionValue(string) string                  { return mock.optionValueProvider() }
 
 func newEmptyMockRepository() *mockRepository {
 	return &mockRepository{
