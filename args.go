@@ -15,12 +15,15 @@ import (
 
 var state = domain.NewStateMachine(os.Args[0], "", data.NewRepository())
 
+// SetApplicationDescription takes a human readable description of the app.
+// This text is only shown in the help output.
 func SetApplicationDescription(text string) {
 	state.SetDescription(text)
 }
 
-// DefineOption allows the developer to define a default optional command line
-// argument the caller can pass to the application.
+// DefineOption allows the developer to define a simple optional command line
+// argument the caller can pass to the application. Only defined options will
+// be accepted during the parsing phase.
 //
 // If the name is a single character it will serve as the shortName, else as
 // the longName. The name is a mandatory field.
@@ -37,29 +40,34 @@ func DefineOption(name string, description string) {
 }
 
 // DefineOptionStrict allows the developer to define an optional command
-// line argument the caller can pass to the application. Only defined options
-// will be accepted during the parsing phase.
+// line argument the caller can pass to the application.
 //
-// At least a shortName or a longName must be given. Defining both is nice but
-// not functionally required. The shortName must be a single alphabetic
-// character (`^[a-zA-Z]{1}$`), while the longName must be at least two
-// alphabetic+ characters (`^[a-zA-Z-._]{2,}$`).
+// At least a shortName or a longName must be given. Defining both is nice
+// but not functionally required. The shortName must be a single alphabetic
+// character matching the `^[a-zA-Z]{1}$` regular expression, while the
+// longName must be at least two alphabetic+ characters, matching the
+// `^[a-zA-Z-._]{2,}$` regular expression.
 //
 // The description, if given, is only shown in the help output.
 //
-// If a pattern is given, then any user provided value for this option must
-// match it. Empty string patterns are allowed and will not constrain the input.
+// If a pattern regular expression is given, then any caller provided value
+// for this option must match it for the value to be assigned to the option.
+// Empty string patterns are allowed and will behave as "accept everything".
+// The library will validate the pattern regular expression. If the validation
+// fails the library will panic runtime.
 //
-// If the caller passes the option name alone (short or long), without a giving
-// corresponding value, the library will treat it the same way as would the
-// value "true" have been passed along.
+// If a caller passes the defined (short or long) option name alone, without
+// any corresponding value, the library will treat it as a boolean true flag
+// and return "true" for it's value.
 //
-// If the caller passes multiple instances of the same option with different
-// values, the library will print a help text and exit the application
-// gracefully.
+// If the caller provides multiple instances of the same option, the library
+// will print a help text and exit the application gracefully.
 //
-// If the caller passes a value that doesn't match the given pattern, the
-// library will print a help text and exit the application gracefully.
+// If the caller passes a value that doesn't match the given option pattern,
+// then the library will try to match the value for any argument instead. If
+// there is a defined argument that accepts the value it will be assigned to
+// that argument, otherwise the library will print a help text and exit the
+// application gracefully.
 func DefineOptionStrict(shortName string, longName string, description string, pattern string) {
 	err := state.DefineOption(shortName, longName, description, pattern)
 	if err != nil {
@@ -81,9 +89,9 @@ func DefineArgument(name string, description string) {
 //
 // If minCount and maxCount is given the number of caller provided values will
 // be validated to be in that (inclusive) range. The minCount must be greater
-// than or equal to 1.
+// than or equal to 1 and the maxCount must be greater than or equal to minCount.
 //
-// If a pattern is given, then the caller provided input argument data will be
+// If a pattern is given, then the caller provided input argument value will be
 // matched against it. This allows the caller to mix the order of input values.
 // The values will in the parsing phase be associated with the first argument
 // definition that matches them. It is the developers responsibility to define
@@ -91,11 +99,15 @@ func DefineArgument(name string, description string) {
 // documentation in the argument descriptions for the caller to make an
 // educated call statement.
 //
-// If a pattern is given, it will be validated, causing the library to panic if
-// it's invalid.
+// If a pattern is given, it will be validated, causing the library to panic
+// runtime if it's invalid.
 //
 // If the caller fails to pass the constrained number of matching arguments,
 // the library will print a help text and exit the application gracefully.
+//
+// If the caller provides an argument value that doesn't match any defined
+// arguments, the library will print a help text and exit the application
+// gracefully.
 func DefineArgumentStrict(name string, description string, minCount int, maxCount int, pattern string) {
 	err := state.DefineArgument(name, description, minCount, maxCount, pattern)
 	if err != nil {
@@ -104,25 +116,26 @@ func DefineArgumentStrict(name string, description string, minCount int, maxCoun
 }
 
 // Parse operates on the user provided command line arguments and matches them
-// agains the developer defined option- and argument configurations. The parser
-// will validate the input and print the help text and exit if:
+// against the developer defined option and argument configurations. The parse
+// function will validate the input and print the help text and exit gracefully
+// if:
 //
-// - An unknown option is parsed, or it's corresponding value doesn't match the
-// defined regular expression.
+//   - An unknown option is parsed.
 //
-// - A mandatory argument is parsed that doesn't match the defined regular
-// expression or violates the defined input count limitations.
+//   - A value doesn't match any option or argument patterns.
 //
-// - After all input is parsed and there are defined mandatory arguments that
-// hasn't received the minimum number of input values.
+//   - An argument value would violate the defined argument value count limits.
+//
+//   - After all input is parsed, there are defined mandatory arguments that
+//     hasn't received the minimum number of input values.
 func Parse() {
 	if err := state.Parse(); err != nil {
 		exitWithHelpMessage(err, state)
 	}
 }
 
-// GetOptionValue returns the parsed value for a defined option as a
-// string. If there is no value for the option, the fallback is returned
+// GetOptionValue returns the parsed value for a defined option as a string.
+// If there is no parsed value for the option, the fallback is returned
 // instead.
 func GetOptionValue(name string, fallback string) string {
 	result := state.GetOptionValue(name)
@@ -132,8 +145,8 @@ func GetOptionValue(name string, fallback string) string {
 	return result
 }
 
-// GetOptionIntValue returns the parsed value for a defined option as a
-// 64 bit integer. If there is no value for the option, the fallback is
+// GetOptionIntValue returns the parsed value for a defined option as a 64 bit
+// integer. If there is no parsed value for the option, the fallback is
 // returned instead.
 func GetOptionIntValue(name string, fallback int64) int64 {
 	value := state.GetOptionValue(name)
@@ -145,8 +158,8 @@ func GetOptionIntValue(name string, fallback int64) int64 {
 }
 
 // GetOptionFloatValue returns the parsed value for a defined option as a
-// 64 bit floating point number. If there is no value for the option, the
-// fallback is returned instead.
+// 64 bit floating point number. If there is no parsed value for the option,
+// the fallback is returned instead.
 func GetOptionFloatValue(name string, fallback float64) float64 {
 	value := state.GetOptionValue(name)
 	result, err := strconv.ParseFloat(value, 64)
@@ -157,8 +170,8 @@ func GetOptionFloatValue(name string, fallback float64) float64 {
 }
 
 // GetOptionBoolValue returns the parsed value for a defined option as a
-// boolean. If there is no value for the option, the fallback is returned
-// instead.
+// boolean. If there is no parsed value for the option, the fallback is
+// returned instead.
 func GetOptionBoolValue(name string, fallback bool) bool {
 	value := state.GetOptionValue(name)
 	result, err := strconv.ParseBool(value)
@@ -174,9 +187,9 @@ func GetArgumentValues(name string) []string {
 	return state.GetArgumentValues(name)
 }
 
-// GetArgumentIntValues returns all parsed mandatory values that matched
-// the defined argument and can be parsed into a 64 bit integer. Values
-// that can not be parsed are simply omitted.
+// GetArgumentIntValues returns all parsed mandatory values that matched the
+// defined argument and can be cast into a 64 bit integer. Values that can not
+// be cast into a 64 bit integer are simply omitted from the result.
 func GetArgumentIntValues(name string) []int64 {
 	values := state.GetArgumentValues(name)
 	result := []int64{}
@@ -188,9 +201,10 @@ func GetArgumentIntValues(name string) []int64 {
 	return result
 }
 
-// GetArgumentFloatValues returns all parsed mandatory values that matched
-// the defined argument and can be parsed into a 64 bit floating point
-// number. Values that can not be parsed are simply omitted.
+// GetArgumentFloatValues returns all parsed mandatory values that matched the
+// defined argument and can be cast into a 64 bit floating point number. Values
+// that can not be cast into a 64 bit floating point number are simply omitted
+// from the result.
 func GetArgumentFloatValues(name string) []float64 {
 	values := state.GetArgumentValues(name)
 	result := []float64{}
@@ -202,9 +216,9 @@ func GetArgumentFloatValues(name string) []float64 {
 	return result
 }
 
-// GetArgumentBoolValues returns all parsed mandatory values that matched
-// the defined argument and can be parsed into a boolean value. Values
-// that can not be parsed are simply omitted.
+// GetArgumentBoolValues returns all parsed mandatory values that matched the
+// defined argument and can be cast into a boolean value. Values that can not
+// be cast into a boolean value are simply omitted from the result.
 func GetArgumentBoolValues(name string) []bool {
 	values := state.GetArgumentValues(name)
 	result := []bool{}
