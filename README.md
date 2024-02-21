@@ -28,6 +28,7 @@ func main() {
 	// Define optional user input
 	args.DefineOption("m", "Max lines to read.") // simple short-name option with no filter
 	args.DefineOptionStrict("v", "verbose", "Print detailed output.", `^(true|false)$`)
+	args.DefineOptionHelp("h", "help", "Prints this help text.")
 
 	// Define mandatory user input
 	args.DefineArgumentStrict("FILES", "Files to read from.", 1, 2, `^*\.txt$`)
@@ -82,10 +83,11 @@ Usage: ./xmpl [OPTIONS...] FILES... TIMEOUT
 A beautiful example app.
 
 Arguments:
-  FILES   Files to read from.
-  TIMEOUT Read timeout milliseconds.
+  FILES    Files to read from.
+  TIMEOUT  Read timeout milliseconds.
 
 Options:
-  -m            Max lines to read.
-  -v, --verbose Print detailed output.
+  -m             Max lines to read.
+  -v, --verbose  Print detailed output.
+  -h, --help     Prints this help text.
 ```
